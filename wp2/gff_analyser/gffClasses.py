@@ -1,5 +1,5 @@
 import os
-
+import sys
 
 def get_complementary_string(sequence: str):
     complementary_string = ''
@@ -177,17 +177,30 @@ class Organism:
                         if row.feature_type == feature_list[feature_count]:
                             gtf_file.write(row.get_whole_line(start=row.feature_start, end=row.feature_end))
                             
+    def generate_gene_body_gtf(self, gffdata_list):
+        
+        for element in gffdata_list:
+        
+            # Getting the gene_body-GTF
+            bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]),'bedtools')
+            intersect_cmd = "{bed} subtract -a out/{strain}.exon.gtf -b out/{strain}.five_prime_utr.gtf out/{strain}.three_prime_utr.gtf > out/{strain}.exon.gene_bodies.gtf".format(bed=bedtools, strain=element.strain.strip('.gtf'))
+            os.system(intersect_cmd)
+            print("Gene_bodys done")
+                            
     def generate_promotor_gtf(self, gffdata_list, promotor_distance=2000):
         try:
             os.mkdir('out')
         except:
             print('out already exist, skipping creation')
+            
+        
 
         for element in gffdata_list:
 
             feature = 'gene'
             filename_promotor = "out/{strain}.{feature}.promotor.gtf".format(strain=element.strain.strip('.gtf'),
                                                             feature=feature)
+            
             with open(filename_promotor, 'w') as promotor_file:
                 print('Generating Promotor-File')
                 row_counter = 0
@@ -200,6 +213,8 @@ class Organism:
                     elif row.feature_type == feature and row.strand == '-':
                         promotor_file.write(row.get_whole_line(start=row.feature_end, end=row.feature_end + promotor_distance))
                         #promotor_file.write('\n')
+                        
+        
 
     def generate_tss_gtf(self, gffdata_list, tss_distance=100):
         
@@ -209,13 +224,16 @@ class Organism:
             print('out already exist, skipping creation')
 
 
+            
+        
+        
         feature = 'gene'
         for element in gffdata_list:
         # Getting the TSS file
             filename_tss = "out/{strain}.{feature}.TSS{tss_distance}.gtf".format(strain=element.strain.strip('.gtf'),
                                                                   feature=feature, tss_distance=tss_distance)
 
-
+         
             with open(filename_tss, 'w') as tss_file:
                 print('Generating TSS-File')
                 for row in element.gff_data:
