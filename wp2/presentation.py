@@ -4,13 +4,17 @@ import pandas as pd
 import anndata as ad
 from matplotlib import pyplot as plt
 
-def compareDimensionreductions(key: str or list, comparator_key: str, save=None, legend_loc="right margin"):
-    keys = []
-    if type(key) is list:
-        keys.extend(key)
+def getList(element) -> list:
+    list = []
+    if type(element) is list:
+        list.extend(element)
     else:
-        keys.append(key)
-    keys.append(comparator_key)
+        list.append(element)
+    return list
+
+def compareDimensionreductions(adata, key: str or list, comparator: str or list, save=None, legend_loc="right margin"):
+    keys = getList(key)
+    keys.append(getList(comparator))
     sc.pl.umap(adata, color=keys, save=save, legend_loc=legend_loc)
 
 def compareFeatureToCelltypes(adata, feature: list or str, comparator: str, save=None):
