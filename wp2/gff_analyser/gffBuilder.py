@@ -1,4 +1,6 @@
-import gc
+import os
+import sys
+import pandas as pd
 import gff_analyser.gffClasses as gff
 
 def strain_exists(name: str, data: list):
@@ -21,8 +23,10 @@ def add_sequence(data: list, dna_seq: str, fasta_counter: int, printable_seq: st
         dna_seq = ''
     return dna_seq
 
-def header_check():
-    return True
+def header_check(file):
+    with open(file, 'r') as file:
+        return (True if not file.readline().startswith('#') else False)
+    
 
 def build_gff3_class(file):
 
@@ -34,16 +38,16 @@ def build_gff3_class(file):
     #with open(file) as gff3:
     fasta_extract = False
     fasta_counter = -2
-    headerless_file = False
+    headerless_file = header_check(file)
 
     gff3_gen = (row for row in open(file).readlines())
 
 
-    #change
+    print('Generating GTF-Objects')
 
     # Check if the input is a headerless file
-    if header_check():
-        headerless_file = True
+    if headerless_file:
+        #headerless_file = True
         tmp_organism = gff.Organism()
         tmp_organism.strain = file.split('/')[-1]
 
@@ -67,10 +71,10 @@ def build_gff3_class(file):
 
             tmp_organism.gff_data.append(gff.GffData(gffrow=gffrow))
 
-        elif line.startswith('##FASTA'):
+        elif line.startswith('##FASTA') and not headerless_file:
             fasta_extract = True
 
-        elif line.startswith('>'):
+        elif line.startswith('>') and not headerless_file:
             fasta_counter += 1
             dna_seq = add_sequence(data=organism_class_objects, dna_seq=dna_seq, fasta_counter=fasta_counter,
                                    printable_seq=printable_seq)
@@ -90,11 +94,57 @@ def build_gff3_class(file):
 
         element.set_annotated_dna_seq(fasta_extract=fasta, filename=file.split('/')[-1])
         
-    gc.collect()
+    print('Objects done')
 
     return organism_class_objects
 
+def generate_feature_files(gtf_file, fragments, enhancer_bed, blacklisted_bed, threshold, promotor_distance, tss_distance, out='out'):
+    
+    object_list = build_gff3_class(file=gtf_file)
+    
+    
+    for element in object_list:
+        features = element.count_features()
 
+        element.generate_feature_gtf(gffdata_list=object_list, feature_keys=features, out=out)
+        element.generate_promotor_gtf(gffdata_list=object_list, promotor_distance=promotor_distance, out=out)
+        element.generate_tss_gtf(gffdata_list=object_list, tss_distance=tss_distance, out=out)
+        element.generate_gene_body_gtf(gffdata_list=object_list, out=out)
+        
+        strain = element.strain
+        
+        # Getting bedtools Path
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]),'bedtools')
+
+        
+        
+        # Load the bed file into a pandas dataframe
+        bed_df = pd.read_table(fragments, header=None, names=["chrom", "start", "end", "feature", "count", "strand"])
+
+        # Filter the dataframe based on a count threshold
+        
+        filtered_df = bed_df[bed_df["count"] > threshold]
+
+        filename = f"{fragments}.peak{threshold}.bed"
+        # Print the filtered dataframe
+        filtered_df.to_csv(filename ,sep='\t', index=None) 
+        
+        peakfile = f"{fragments}.peak{threshold}.bed"
+
+        # Getting the peak-GTF
+        intersect_cmd = f'{bedtools} intersect -a {gtf_file} -b {peakfile} > {out}{strain}.peak{threshold}.gtf'
+        os.system(intersect_cmd)
+        print("Peaks done")
+
+        # Getting the enhancer-GTF 
+        intersect_cmd = f'{bedtools} intersect -a {gtf_file} -b {enhancer_bed} > {out}{strain}.enhancer.gtf'
+        os.system(intersect_cmd)
+        print("Enhancers done")
+
+        # Getting the exclusion_list-GTF
+        intersect_cmd = f'{bedtools} intersect -a {gtf_file}  -b {blacklisted_bed} > {out}{strain}.blacklisted.gtf'
+        os.system(intersect_cmd)
+        print("Blacklist done")
 
 
     

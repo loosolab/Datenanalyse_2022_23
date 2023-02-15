@@ -148,11 +148,11 @@ class Organism:
         self._printable_fasta = ""
         self._gff_data = []
 
-    def generate_feature_gtf(self, gffdata_list, feature_keys):
+    def generate_feature_gtf(self, gffdata_list, feature_keys, out='out/'):
     #feature_list from .count_features
 
         try:
-            os.mkdir('out')
+            os.mkdir("{out}".format(out=out))
         except:
             print('out already exist, skipping creation')
 
@@ -169,7 +169,8 @@ class Organism:
                     element.strain += '.gtf'
 
 
-                filename = "out/{strain}.{feature}.gtf".format(strain=element.strain.strip('.gtf'),
+                filename = "{out}{strain}.{feature}.gtf".format(out=out,
+                                                                 strain=element.strain.strip('.gtf'),
                                                                  feature=feature_list[feature_count])
 
                 with open(filename, 'a') as gtf_file:
@@ -177,19 +178,26 @@ class Organism:
                         if row.feature_type == feature_list[feature_count]:
                             gtf_file.write(row.get_whole_line(start=row.feature_start, end=row.feature_end))
                             
-    def generate_gene_body_gtf(self, gffdata_list):
+    def generate_gene_body_gtf(self, gffdata_list, out='out/'):
+                     
+        try:
+            os.mkdir("{out}".format(out=out))
+        except:
+            print('out already exist, skipping creation')
         
         for element in gffdata_list:
         
             # Getting the gene_body-GTF
             bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]),'bedtools')
-            intersect_cmd = "{bed} subtract -a out/{strain}.exon.gtf -b out/{strain}.five_prime_utr.gtf out/{strain}.three_prime_utr.gtf > out/{strain}.exon.gene_bodies.gtf".format(bed=bedtools, strain=element.strain.strip('.gtf'))
+            intersect_cmd = "{bed} subtract -a {out}{strain}.exon.gtf -b {out}{strain}.five_prime_utr.gtf {out}{strain}.three_prime_utr.gtf > {out}{strain}.exon.gene_bodies.gtf".format(bed=bedtools,
+                                                                            out=out,
+                                                                            strain=element.strain.strip('.gtf'))
             os.system(intersect_cmd)
             print("Gene_bodys done")
                             
-    def generate_promotor_gtf(self, gffdata_list, promotor_distance=2000):
+    def generate_promotor_gtf(self, gffdata_list, promotor_distance, out='out/'):
         try:
-            os.mkdir('out')
+            os.mkdir("{out}".format(out=out))
         except:
             print('out already exist, skipping creation')
             
@@ -198,8 +206,9 @@ class Organism:
         for element in gffdata_list:
 
             feature = 'gene'
-            filename_promotor = "out/{strain}.{feature}.promotor.gtf".format(strain=element.strain.strip('.gtf'),
-                                                            feature=feature)
+            filename_promotor = "{out}{strain}.{feature}.promotor{distance}.gtf".format(out=out,
+                                                                                         strain=element.strain.strip('.gtf'),
+                                                            feature=feature, distance=promotor_distance)
             
             with open(filename_promotor, 'w') as promotor_file:
                 print('Generating Promotor-File')
@@ -216,10 +225,10 @@ class Organism:
                         
         
 
-    def generate_tss_gtf(self, gffdata_list, tss_distance=100):
+    def generate_tss_gtf(self, gffdata_list, tss_distance=100, out='out/'):
         
         try:
-            os.mkdir('out')
+            os.mkdir("{out}".format(out=out))
         except:
             print('out already exist, skipping creation')
 
@@ -230,7 +239,7 @@ class Organism:
         feature = 'gene'
         for element in gffdata_list:
         # Getting the TSS file
-            filename_tss = "out/{strain}.{feature}.TSS{tss_distance}.gtf".format(strain=element.strain.strip('.gtf'),
+            filename_tss = "{out}{strain}.{feature}.TSS{tss_distance}.gtf".format(out=out, strain=element.strain.strip('.gtf'),
                                                                   feature=feature, tss_distance=tss_distance)
 
          
