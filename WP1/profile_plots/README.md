@@ -17,6 +17,7 @@ Here the fragments from the bed files can be categorized using various strategie
 
 ### Step 5: (calculate fragment count over TSS)
 Here depending on the categorization strategies used in Step 1, multiple bigWig files may be passed as input.
+
   computeMatrix reference-point --referencePoint TSS -b 1000 -a 1000 -S <BIGWIG_FILE> <BIGWIG_FILE_2> -R <GTF_FILE> -o <MATRIX_FILE_GZ> --outFileSortedRegions <REGIONS_FILE_BED>
 
 ### Step 6: (plot using deepTools)
