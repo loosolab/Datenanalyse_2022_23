@@ -1,4 +1,4 @@
-# Creating rofile plots.
+# Creating Profile plots.
 
 ## Aproach 1: (Using Deeptools)
 
