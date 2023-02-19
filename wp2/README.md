@@ -66,7 +66,7 @@ The next table provides information about each column a line can have, empty col
 | 9             	| attribute 	| List of semicolon-seperated additional features                                                                                                                     	|
 
 Also this WP uses the same fragment files provided by [CATLAS](http://catlas.org/humanenhancer/#!/) as used by WP1.
-A brief description of the `.bed` file Format the fragment file comes in can be found in their respective [README.md](/datenanalyse/WP1/README.md)
+A brief description of the `.bed` file Format the fragment file comes in can be found in their respective [README.md](/Datenanalyse_2022_23/WP1/README.md)
 `The data source` Chapter. </br>
 At last we need a `.h5ad` File, correpsonding to the fragment file we use. This file
 contains an prepared [Anndata](https://anndata.readthedocs.io/en/latest/) object from [CATLAS](http://catlas.org/humanenhancer/#!/)
@@ -81,7 +81,7 @@ The fourth and fifth Column in this line describes the Start and Stop Position o
 genome. For later calculations it is mandatory to generate separate [GFF](https://www.ensembl.org/info/website/upload/gff.html) files,
 where each file containing only lines with the same feature. We talk on how to use the provided tools for
 generating these files in the next Chapter.</br>
-The location of a read inside a [fragment](/datenanalyse/WP1/README.md) file, can be found in the second and third column of a line.
+The location of a read inside a [fragment](/Datenanalyse_2022_23/WP1/README.md) file, can be found in the second and third column of a line.
 By counting the number of reads from the fragment file that's position is inside the location of a feature
 from the reference genome we can finally calculate the feature overlap rate and store it to the
 [Anndata](https://anndata.readthedocs.io/en/latest/) object.
