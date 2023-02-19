@@ -48,7 +48,7 @@ file. This text file consists of a possible Header entry and a line for every re
 Below you can find an example for a [GFF](https://www.ensembl.org/info/website/upload/gff.html) file from the
 [GMOD](http://gmod.org/wiki/GFF3)<sup>[5](#font-size1---5-httpgmodorgwikigff3-font)</sup> Wiki.
 <p align="center">
-   <img src="images/gff_file_excerpt.png" title="" alt=""/>
+   <img src="docs/images/gff_file_excerpt.png" />
 </p>
 
 The next table provides information about each column a line can have, empty columns are denoted with a '.' <sup>[3](#font-size1---3-httpswwwensemblorginfowebsiteuploadgffhtml-font)</sup>.
@@ -132,7 +132,7 @@ Some features like promoters are not directly annotated inside a [GFF](https://w
 but can be calculated by the gene model as shown exemplarily in the image<sup>[7](#font-size1---7-httpswwwresearchgatenetfigurean-illustration-of-a-typical-structure-of-a-eukaryotic-gene-a-gene-may-have-manyfig351510353-font)</sup> below:
 
 <p align="center">
-   <img src="images/An-illustration-of-a-typical-structure-of-a-eukaryotic-gene-A-gene-may-have-many.png" />
+   <img src="docs/images/An-illustration-of-a-typical-structure-of-a-eukaryotic-gene-A-gene-may-have-many.png" />
 </p>
 
 The features this WP focused on are as listed:
