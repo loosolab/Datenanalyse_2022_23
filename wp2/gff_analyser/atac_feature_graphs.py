@@ -5,6 +5,20 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+def filter_by_cell_count(adata, threshold, key = "SCSA_pred_celltype"):
+    """Filter the adata object by cells that have a higher count then threshold in the column described by key"""
+    key_values = set(adata.obs[key])
+    
+    counts = {}
+    for key_value in key_values:
+        counts[key_value] = adata.obs[adata.obs[key] == key_value].shape[0]
+    
+    for k, count in counts.items():
+        if count < threshold:
+            adata = adata.obs[adata.obs[key] != k]
+
+    return adata
+
 def violin_plots(adata, output, group=None, filtered=None, multi_panel=True, log=False):
     
     if filtered == None:
