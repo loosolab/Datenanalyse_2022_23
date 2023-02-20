@@ -23,9 +23,9 @@ def add_sequence(data: list, dna_seq: str, fasta_counter: int, printable_seq: st
         dna_seq = ''
     return dna_seq
 
-def header_check(file):
-    with open(file, 'r') as file:
-        return (True if not file.readline().startswith('#') else False)
+def header_check(file_to_check):
+    with open(file_to_check, 'r') as file_to_check:
+        return (True if not file_to_check.readline().startswith('#') else False)
     
 
 def build_gff3_class(file: list):
@@ -98,12 +98,25 @@ def generate_feature_files(gtf_file, fragments, enhancer_bed, blacklisted_bed, t
     
     for i, element in enumerate(object_list):
         features = element.count_features()
-
-        element.generate_feature_gtf(gffdata_list=object_list, feature_keys=features, out=out)
-        element.generate_promoter_gtf(gffdata_list=object_list, promoter_distance=promoter_distance, out=out)
-        element.generate_tss_gtf(gffdata_list=object_list, tss_distance=tss_distance, out=out)
-        element.generate_gene_body_gtf(gffdata_list=object_list, out=out)
-        element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
+        
+        
+        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
+        peak_object_list = build_gff3_class(file=[peak_gtf])
+        
+        
+        # Calculating feature's only for peak filtered lines
+        for ele in peak_object_list:
+            ele.generate_feature_gtf(feature_keys=features, out=out)
+            ele.generate_promoter_gtf(promoter_distance=promoter_distance, out=out)
+            ele.generate_tss_gtf(tss_distance=tss_distance, out=out)
+            ele.generate_gene_body_gtf(out=out)
+            ele.generate_enhancer_gtf(gtf_file=peak_gtf, enhancer_bed=enhancer_bed, out=out)
+            ele.generate_blacklisted_region_gtf(gtf_file=peak_gtf, blacklisted_bed=blacklisted_bed, out=out)        
+        
+        element.generate_feature_gtf(feature_keys=features, out=out)        
+        element.generate_promoter_gtf(promoter_distance=promoter_distance, out=out)
+        element.generate_tss_gtf(tss_distance=tss_distance, out=out)
+        element.generate_gene_body_gtf(out=out)        
         element.generate_enhancer_gtf(gtf_file=gtf_file[i], enhancer_bed=enhancer_bed, out=out)
         element.generate_blacklisted_region_gtf(gtf_file=gtf_file[i], blacklisted_bed=blacklisted_bed, out=out)
         
