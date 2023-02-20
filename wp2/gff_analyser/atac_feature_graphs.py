@@ -4,6 +4,7 @@ import scanpy as sc
 import pandas as pd
 from matplotlib import pyplot as plt
 
+
 def violin_plots(adata, output, group=None, filtered=None, multi_panel=True, log=False):
     
     if filtered == None:
@@ -13,16 +14,11 @@ def violin_plots(adata, output, group=None, filtered=None, multi_panel=True, log
             if adata.obs[item].dtype == 'int64':
                 item_list.append(item)
             elif adata.obs[item].dtype == 'float64' and not item.startswith("n_"):
-                item_list.append(item)
-        
-        
+                item_list.append(item)  
     else:
         item_list = filtered
     
-    try:
-        os.mkdir(f"{output}violins/")
-    except:
-        print("Folder Exists")
+    createOutputDirectory(f"{output}violins/")
             
     for item in item_list:
         sc.pl.violin(adata, keys=item, groupby=group, multi_panel=multi_panel, rotation=90, log=log)
@@ -52,10 +48,7 @@ def scatter_plots(adata, output, feature_filtered=None, celltype_filtered=None, 
     else:
         item_list = feature_filtered
         
-    try:
-        os.mkdir(f"{output}images/")
-    except:
-        print("Skipping creating folder")
+    createOutputDirectory(f"{output}images/")
 
     for itemx in item_list:
 
@@ -84,15 +77,12 @@ def simple_scatter(adata, output, feature=['n_fragments_in_CDS', 'n_total_fragme
     if display_all:
         feature = item_list
         
-    try:
-        os.mkdir(f"{output}scatter")
-    except:
-        print("Folder exists")
-            
+    createOutputDirectory(f"{output}scatter")
+
     for itemx in feature:
 
         x = adata.obs[itemx]
-        for n, itemy in enumerate(item_list):
+        for _, itemy in enumerate(item_list):
             if not itemy == itemx:
                 y = adata.obs[itemy]
                 plt.scatter(x, y)
@@ -104,20 +94,16 @@ def simple_scatter(adata, output, feature=['n_fragments_in_CDS', 'n_total_fragme
                 
                 
 def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, multi_panel=False):
-    
     output= f"{out}{feature1}_{feature2}/"
     try:
         if not out.endswith('/'):
-            print('Please specify valid Path ('/')')
+            print("Please specify valid Path ('/')")
             return
-        os.mkdir(out)        
+        createOutputDirectory(out)
     except:
         print('First out exists')
         
-    try:
-        os.mkdir(output)
-    except:
-        print('Second too')
+    createOutputDirectory(output)
     
     if celltype_filtered != None:
         celltype_of_interest = celltype_filtered
@@ -145,3 +131,62 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
         plt.savefig(f"{output}{feature1}_{feature2}_{cell_type}.png")
         plt.show()
         
+
+def getList(element) -> list:
+    """ Return a list with element (list or any)"""
+    list = []
+    if type(element) is list:
+        list.extend(element)
+    else:
+        list.append(element)
+    return list
+
+def compareDimensionreductions(adata, key: str or list, comparator: str or list, out=None, legend_loc="right margin"):
+    """Create a Dimension reduction for each key and comparator, save to out"""
+    # TODO: Test this
+    keys = getList(key)
+    keys.append(getList(comparator))
+    sc.pl.umap(adata, color=keys, legend_loc=legend_loc)
+    if out:
+        createOutputDirectory(out)
+        if type(key) is list:
+            filename = keys.join('_')
+        else:
+            filename = key
+        plt.savefig(f'{out}umaps/{filename}.png')
+    plt.close()
+
+def compareFeatureToCelltypes(adata, feature: list or str, comparator: str, out=None):
+    """
+    Wrapper function for `renderCompareFeatureToCelltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
+
+    Arguments:
+    adata - Object that should be plotted
+    feature - can be either a list of keys or a key. Is being compared to the comparator
+    comparator - the element to groupby making a comparison easier
+    out - location to save the plots to, can be None
+    """
+    if type(feature) is list:
+        features = feature
+        for feature in features:
+            print(f'{feature}:')
+            renderCompareFeatureToCelltypes(adata, feature, comparator, out=out)
+    else:
+        renderCompareFeatureToCelltypes(adata, feature, comparator, out=out)
+
+def renderCompareFeatureToCelltypes(adata, feature, comparator, out = None):
+    """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
+    label = 'Percent' if feature.startswith('pct') else 'Count'
+    fig, axes = plt.subplots(nrows=1, ncols=2, gridspec_kw={'wspace':0.4})
+    sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
+    sc.pl.violin(adata, feature, groupby=comparator, ax = axes[1], rotation=90, show=False, ylabel="")
+    if out:
+        createOutputDirectory(out)
+        fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
+
+def createOutputDirectory(out):
+    """Creates the declared directory."""
+    try:
+        os.mkdir(f"{out}")
+    except:
+        print(f"Folder {out} exists.")
