@@ -28,6 +28,7 @@ In the Chapter [Quick Start](#quick-start) you'll find an Introduction on how to
 2. [Reading a General Feature File](#Reading-a-General-Feature-File)
    1. [Annotated Features](#Annotated-Features)
    2. [Other Features](#Other-Features)
+   3. [Wrapper Function](#Wrapper-Function)
 3. [Calculating Feature Overlap](#Calculating-Feature-Overlap)
 4. [Data Presentation](#Data-Presentation)
    1. [Different Presentation Styles](#Different-Presentation-Styles)
@@ -98,7 +99,10 @@ _gff\_analyser_ provides the two modules:
 The _gffBuilder.py_ contains a parser for the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file format,
 which stores the file information into an object and a wrapper function to generate all possible feature files. The parser is used as follows:
 
+```py  
     object_list = build_gff3_class(file: list)
+```
+
 The input needed for this function:
 
 - file = A list containing the Paths of the input files. Multiple Files can be processed at te same time
@@ -110,7 +114,9 @@ feature is generated.</br>
 
 The wrapper function for generating all feature files is called by:
 
+```py  
     generate_feature_files(gtf_file: list, fragments: str, enhancer_bed: str, blacklisted_bed: str, threshold: int, promoter_distance: int, tss_distance: int, out: str)
+```
 
 The input needed for this wrapper function is:
 
@@ -121,7 +127,7 @@ The input needed for this wrapper function is:
 - threshold = Integer representing a stated threshold for peak filering
 - promoter_distancer = Interger representing a stated promoter distance
 - tss_distance = Integer representing the TSS distance
-- out = Output Directory, by default `out/`
+- out = Output Directory
 
 The _gffClasses.py_ contains all the methods needed for generating the [GFF](https://www.ensembl.org/info/website/upload/gff.html)
 files. A more detailed use of these methods can be found in following Chapters.
@@ -129,17 +135,22 @@ files. A more detailed use of these methods can be found in following Chapters.
 #### Annotated Features
 
 To generate a file for each feature annotated inside
-these objects, we can use the method `self.generate_feature_gtf(gffdata_list: list, feature_keys: list)`
+these objects, we can use the method `self.generate_feature_gtf(feature_keys: list, out: str)`
 </br>The input the method uses are:
-- gffdata_list = Previously generated object_list
+
 - feature_keys = A list of features to analyse
+- out = Output Directory
+
+ 
 
 Below an example for generating all possible feature files is shown:
 
+```py  
     for element in organism_list:
         features = element.count_features()        
-        element.generate_feature_gtf(gffdata_list=object_list, feature_keys=features)
-
+        element.generate_feature_gtf(feature_keys=features)
+```
+        
 The method `features = element.count_features()` returns a list of all existing features inside the
 [GFF](https://www.ensembl.org/info/website/upload/gff.html) file, so the method `element.generate_feature_gtf(feature_keys=features)`
 knows what files exactly to generate, as this list is used as positional argument in this method.
@@ -179,12 +190,14 @@ position we can subtract a stated length which represents the corresponding prom
 of this promotor is the start of the corresponding gene.</br>
 To generate a [GFF](https://www.ensembl.org/info/website/upload/gff.html) file containing only promoter regions 
 we can call the method: 
-            
-    self.generate_promoter_gtf(gffdata_list: list, promoter_distance: int, out: str)
+
+```py              
+    self.generate_promoter_gtf(promoter_distance: int, out: str)
+```
+
 
 The input needed for this method is:
 
-- gffdata_list = Previously generated object_list
 - promoter_distance = Stated length of promoter, for example `2000`
 - out = Output Directory
 
@@ -193,11 +206,12 @@ The input needed for this method is:
 To get the TSS start and stop Position, we also need to know where a gene is located. From the gene start, we
 can add a stated length to the start to get the end position of the TSS.</br> The method for generating a TSS feature file is:
 
-    element.generate_tss_gtf(gffdata_list: list, tss_distance: int, out: str)
+```py  
+    self.generate_tss_gtf(tss_distance: int, out: str)
+```
 
 The input needed for this method is:
 
-- gffdata_list = Previously generated object_list
 - TSS_distance = Stated length of the TSS, for example `100`
 - out = Output Directory
 
@@ -209,11 +223,12 @@ a [GFF](https://www.ensembl.org/info/website/upload/gff.html) file containing on
 and placed inside the output directory for this method to work.</br>
 The method for generating a Gene Body feature file is:
 
-    element.generate_gene_body_gtf(gffdata_list: list, out: str)
+```py  
+    self.generate_gene_body_gtf(out: str)
+```
 
 The input needed for this method is:
 
-- gffdata_list = Previously generated object_list
 - out = Output Directory
 
 ##### Peaks
@@ -223,7 +238,9 @@ fragments file. When intersecting this file with bedtools to the reference genom
 we get the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file containing all peaks for this threshold.
 </br> The wrapper method for this is:
 
-    def generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str)
+```py  
+    self.generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str)
+```
 
 The input needed for this wrapper method is:
 
@@ -232,7 +249,25 @@ The input needed for this wrapper method is:
 - gtf_file = Path of the reference genome [GFF](https://www.ensembl.org/info/website/upload/gff.html) File
 - out = Output Directory
 
-** When using this function u need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
+NOTE:
+
+The [GFF](https://www.ensembl.org/info/website/upload/gff.html) file generated by this method, can be used for further
+feature filtering. After calling the parser as shown [here](#Annotated-Features), we can call the parser 
+inside the `for`-loop a second time with the generated peak as input.</br> An example is shown here:
+
+```py  
+    object_list = build_gff3_class(file=gtf_file)
+
+    for i, element in enumerate(object_list):
+        features = element.count_features()
+        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
+        peak_object_list = build_gff3_class(file=[peak_gtf])
+        # Calculating feature's only for peak filtered lines
+        for ele in peak_object_list:
+            ele.generate_feature_gtf(feature_keys=features, out=out)
+```
+
+** When using this function we need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
 and use the counter to index the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file input. Otherwise Multifile support won't work, because input-files are given
 inside a list.
 
@@ -242,7 +277,9 @@ With the `.bed` files acquired from [NCBI](https://www.encodeproject.org/referen
 we can intersect the fragment file and the _blacklisted\_region.bed_ with bedtools.
 </br>The wrapper method for this is:
 
-    generate_blacklisted_region_gtf(self, gtf_file: str, blacklisted_bed: str, out: str)
+```py  
+    self.generate_blacklisted_region_gtf(self, gtf_file: str, blacklisted_bed: str, out: str)
+```
 
 The input needed for this wrapper method is:
 
@@ -250,7 +287,7 @@ The input needed for this wrapper method is:
 - blacklisted_bed = Path to the downloaded _blacklisted\_region.bed_ [NCBI](https://www.encodeproject.org/references/ENCSR938RZZ/)
 - out = Output Directory
 
-** When using this function u need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
+** When using this function we need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
 and use the counter to index the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file input. Otherwise Multifile support won't work, because input-files are given
 inside a list.
 
@@ -260,7 +297,9 @@ With the `.bed` files acquired from [NCBI](https://www.encodeproject.org/referen
 we can intersect the fragment file and the _enhancer.bed_ with bedtools.
 </br>The wrapper method for this is:
 
-    generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str)
+```py  
+    self.generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str)
+```
 
 The input needed for this wrapper method is:
 
@@ -268,9 +307,10 @@ The input needed for this wrapper method is:
 - enhancer_bed = Path to the downloaded _enhancer.bed_ from [NCBI](https://www.encodeproject.org/references/ENCSR938RZZ/) 
 - out = Output Directory
 
-** When using this function u need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
+** When using this function we need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
 and use the counter to index the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file input. Otherwise Multifile support won't work, because input-files are given
 inside a list.
+
 
 ### Calculating Feature Overlap
 
@@ -278,8 +318,9 @@ For the calculation of the feature overlap, a function developed by an organisat
 from the [Max Planck Institute for Heart and Lung Research](https://www.mpg.de/149809/heart-lung-research).
 This is a wrapper function for calculating feature overlaps for all feature files in a given input directory.
 
-
+```py  
     pct_fragments_in_features(adata: anndata, input_dir: str, fragments_file: str)
+```
 
 The input needed for this wrapper function is:
 
@@ -289,7 +330,9 @@ The input needed for this wrapper function is:
 
 It is also possible to calculate the feature overlap for only one given feature with this function.
 
-    pct_fragments_in_promoters(adata: anndata, feature: str, fragments_file: str)
+```py  
+    pct_fragments_in_feature(adata: anndata, feature: str, fragments_file: str)
+```
 
 The input needed for this function is:
 
