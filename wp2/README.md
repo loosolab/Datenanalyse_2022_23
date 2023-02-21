@@ -192,7 +192,7 @@ To generate a [GFF](https://www.ensembl.org/info/website/upload/gff.html) file c
 we can call the method: 
 
 ```py              
-    self.generate_promoter_gtf(promoter_distance: int, out: str)
+self.generate_promoter_gtf(promoter_distance: int, out: str)
 ```
 
 
@@ -207,7 +207,7 @@ To get the TSS start and stop Position, we also need to know where a gene is loc
 can add a stated length to the start to get the end position of the TSS.</br> The method for generating a TSS feature file is:
 
 ```py  
-    self.generate_tss_gtf(tss_distance: int, out: str)
+self.generate_tss_gtf(tss_distance: int, out: str)
 ```
 
 The input needed for this method is:
@@ -224,7 +224,7 @@ and placed inside the output directory for this method to work.</br>
 The method for generating a Gene Body feature file is:
 
 ```py  
-    self.generate_gene_body_gtf(out: str)
+self.generate_gene_body_gtf(out: str)
 ```
 
 The input needed for this method is:
@@ -239,7 +239,7 @@ we get the [GFF](https://www.ensembl.org/info/website/upload/gff.html) file cont
 </br> The wrapper method for this is:
 
 ```py  
-    self.generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str)
+self.generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str)
 ```
 
 The input needed for this wrapper method is:
