@@ -129,16 +129,16 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
     sc.pl.violin(adata_tmp, keys=[feature1, feature2], groupby=group, multi_panel=multi_panel, rotation=90)
     plt.savefig(f"{output}violin.png")
     
-    for  cell_type_raw in adata_tmp.obs['cell type'].unique():
+    for cell_type_raw in adata_tmp.obs['cell type'].unique():
         
         tmp = cell_type_raw.split(' ')
         cell_type = ''.join(tmp)
         
         # for getting rid of spaces, this object only includes filtered cell types since its filtered before
-        tmp_adata = adata_tmp[adata_tmp.obs['cell type'].isin([cell_type_raw])]
+        adata_tmp = adata_tmp[adata_tmp.obs['cell type'].isin([cell_type_raw])]
         
         
-        plt.scatter(tmp_adata.obs[feature1], tmp_adata.obs[feature2])
+        plt.scatter(adata_tmp.obs[feature1], adata_tmp.obs[feature2])
         plt.title(cell_type_raw)
         plt.xlabel(feature1)
         plt.ylabel(feature2)
