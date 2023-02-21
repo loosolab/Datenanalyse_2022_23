@@ -100,7 +100,7 @@ def generate_feature_files(gtf_file, fragments, enhancer_bed, blacklisted_bed, t
         features = element.count_features()
         
         
-        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
+        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=threshold, gtf_file=gtf_file[i], out=out)
         peak_object_list = build_gff3_class(file=[peak_gtf])
         
         
