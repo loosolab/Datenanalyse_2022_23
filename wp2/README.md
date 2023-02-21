@@ -350,7 +350,7 @@ added to the [Anndata](https://anndata.readthedocs.io/en/latest/).obs field. Bel
 find an example for the feature overlap for annotated genes:
 
 <p align="center">
-   <img src="images/adata_example.png" />
+   <img src="docs/images/adata_example.png" />
 </p>
 
 
