@@ -100,7 +100,7 @@ The _gffBuilder.py_ contains a parser for the [GFF](https://www.ensembl.org/info
 which stores the file information into an object and a wrapper function to generate all possible feature files. The parser is used as follows:
 
 ```py  
-    object_list = build_gff3_class(file: list)
+object_list = build_gff3_class(file: list)
 ```
 
 The input needed for this function:
@@ -115,7 +115,7 @@ feature is generated.</br>
 The wrapper function for generating all feature files is called by:
 
 ```py  
-    generate_feature_files(gtf_file: list, fragments: str, enhancer_bed: str, blacklisted_bed: str, threshold: int, promoter_distance: int, tss_distance: int, out: str)
+generate_feature_files(gtf_file: list, fragments: str, enhancer_bed: str, blacklisted_bed: str, threshold: int, promoter_distance: int, tss_distance: int, out: str)
 ```
 
 The input needed for this wrapper function is:
@@ -146,9 +146,9 @@ these objects, we can use the method `self.generate_feature_gtf(feature_keys: li
 Below an example for generating all possible feature files is shown:
 
 ```py  
-    for element in organism_list:
-        features = element.count_features()        
-        element.generate_feature_gtf(feature_keys=features)
+for element in organism_list:
+    features = element.count_features()        
+    element.generate_feature_gtf(feature_keys=features)
 ```
         
 The method `features = element.count_features()` returns a list of all existing features inside the
@@ -256,15 +256,15 @@ feature filtering. After calling the parser as shown [here](#Annotated-Features)
 inside the `for`-loop a second time with the generated peak as input.</br> An example is shown here:
 
 ```py  
-    object_list = build_gff3_class(file=gtf_file)
+object_list = build_gff3_class(file=gtf_file)
 
-    for i, element in enumerate(object_list):
-        features = element.count_features()
-        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
-        peak_object_list = build_gff3_class(file=[peak_gtf])
-        # Calculating feature's only for peak filtered lines
-        for ele in peak_object_list:
-            ele.generate_feature_gtf(feature_keys=features, out=out)
+for i, element in enumerate(object_list):
+    features = element.count_features()
+    peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=10, gtf_file=gtf_file[i], out=out)
+    peak_object_list = build_gff3_class(file=[peak_gtf])
+    # Calculating feature's only for peak filtered lines
+    for ele in peak_object_list:
+        ele.generate_feature_gtf(feature_keys=features, out=out)
 ```
 
 ** When using this function we need to enumerate the [_object\_list_](#Reading-a-General-Feature_File)
@@ -278,7 +278,7 @@ we can intersect the fragment file and the _blacklisted\_region.bed_ with bedtoo
 </br>The wrapper method for this is:
 
 ```py  
-    self.generate_blacklisted_region_gtf(self, gtf_file: str, blacklisted_bed: str, out: str)
+self.generate_blacklisted_region_gtf(self, gtf_file: str, blacklisted_bed: str, out: str)
 ```
 
 The input needed for this wrapper method is:
@@ -298,7 +298,7 @@ we can intersect the fragment file and the _enhancer.bed_ with bedtools.
 </br>The wrapper method for this is:
 
 ```py  
-    self.generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str)
+self.generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str)
 ```
 
 The input needed for this wrapper method is:
@@ -319,7 +319,7 @@ from the [Max Planck Institute for Heart and Lung Research](https://www.mpg.de/1
 This is a wrapper function for calculating feature overlaps for all feature files in a given input directory.
 
 ```py  
-    pct_fragments_in_features(adata: anndata, input_dir: str, fragments_file: str)
+pct_fragments_in_features(adata: anndata, input_dir: str, fragments_file: str)
 ```
 
 The input needed for this wrapper function is:
@@ -331,7 +331,7 @@ The input needed for this wrapper function is:
 It is also possible to calculate the feature overlap for only one given feature with this function.
 
 ```py  
-    pct_fragments_in_feature(adata: anndata, feature: str, fragments_file: str)
+pct_fragments_in_feature(adata: anndata, feature: str, fragments_file: str)
 ```
 
 The input needed for this function is:
