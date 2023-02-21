@@ -167,12 +167,12 @@ but can be calculated by the gene model as shown exemplarily in the image<sup>[7
 
 The features this WP focused on are as listed:
 
-- Promoter
-- Transcription Start Site (TSS)
-- Gene Body
-- Peaks
-- Blacklisted Regions
-- Enhancer
+- [Promoter](#Promoter)
+- [Transcription Start Site (TSS)](#TSS)
+- [Gene Body](#Gene-Body)
+- [Peaks](#Peaks)
+- [Blacklisted Regions](#Blacklisted-Regions)
+- [Enhancer](#Enhancer)
 
 The information for the enhancers and blacklisted regions are accessed through
 the database [NCBI](https://www.encodeproject.org/references/ENCSR938RZZ/)<sup>[8](#font-size1---8-httpswwwencodeprojectorgreferencesencsr938rzz-font)</sup>, where
