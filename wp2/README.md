@@ -174,13 +174,13 @@ The features this WP focused on are as listed:
 - Blacklisted Regions
 - Enhancer
 
-The information for the enhancers and blacklisted regions are accessed thorugh
-the database [NCBI](https://www.encodeproject.org/references/ENCSR938RZZ/), where
+The information for the enhancers and blacklisted regions are accessed through
+the database [NCBI](https://www.encodeproject.org/references/ENCSR938RZZ/)<sup>[8](#font-size1---8-httpswwwencodeprojectorgreferencesencsr938rzz-font)</sup>, where
 a `.bed` file with the sequence regions is provided.</br>
 With the information gathered in the [previous Chapter](#Annotated-Features)
 and the database, we can now calculate the positions of these new features.
 The methods provided in _gffClasses.py_ either re-evaluate the start and end Positions of
-the corresponding objects inside the _object\_list_ or make use of _Bedtools_<sup>[8](#font-size1---8-httpsbedtoolsreadthedocsioenlatest-font)</sup> 
+the corresponding objects inside the _object\_list_ or make use of _Bedtools_<sup>[9](#font-size1---9-httpsbedtoolsreadthedocsioenlatest-font)</sup> 
 and write them to a file inside the output directory.
 
 ##### Promoter
@@ -402,7 +402,8 @@ The concept is similar to the previous mentioned function, but it focuses on `vi
 #### <font size=1>- [5] http://gmod.org/wiki/GFF3 </font>
 #### <font size=1>- [6] https://www.insdc.org/submitting-standards/feature-table/ </font>
 #### <font size=1>- [7] https://www.researchgate.net/figure/An-illustration-of-a-typical-structure-of-a-eukaryotic-gene-A-gene-may-have-many_fig3_51510353 </font>
-#### <font size=1>- [8] https://bedtools.readthedocs.io/en/latest/ </font>
+#### <font size=1>- [8] https://www.encodeproject.org/references/ENCSR938RZZ/ </font>
+#### <font size=1>- [9] https://bedtools.readthedocs.io/en/latest/ </font>
 
 
 
