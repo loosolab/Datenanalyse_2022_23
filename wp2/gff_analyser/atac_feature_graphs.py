@@ -146,7 +146,7 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
         plt.show()
         
 
-def getList(element) -> list:
+def get_list(element) -> list:
     """ Return a list with element (list or any)"""
     list = []
     if type(element) is list:
@@ -155,11 +155,11 @@ def getList(element) -> list:
         list.append(element)
     return list
 
-def compareDimensionreductions(adata, key: str or list, comparator: str or list, out=None, legend_loc="right margin"):
+def compare_dimensionreductions(adata, key: str or list, comparator: str or list, out=None, legend_loc="right margin"):
     """Create a Dimension reduction for each key and comparator, save to out"""
     # TODO: Test this
-    keys = getList(key)
-    keys.append(getList(comparator))
+    keys = get_list(key)
+    keys.append(get_list(comparator))
     sc.pl.umap(adata, color=keys, legend_loc=legend_loc)
     if out:
         createOutputDirectory(out)
@@ -170,9 +170,9 @@ def compareDimensionreductions(adata, key: str or list, comparator: str or list,
         plt.savefig(f'{out}umaps/{filename}.png')
     plt.close()
 
-def compareFeatureToCelltypes(adata, feature: list or str, comparator: str, out=None):
+def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, out=None):
     """
-    Wrapper function for `renderCompareFeatureToCelltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
+    Wrapper function for `render_compare_feature_to_celltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
 
     Arguments:
     adata - Object that should be plotted
@@ -184,11 +184,11 @@ def compareFeatureToCelltypes(adata, feature: list or str, comparator: str, out=
         features = feature
         for feature in features:
             print(f'{feature}:')
-            renderCompareFeatureToCelltypes(adata, feature, comparator, out=out)
+            render_compare_feature_to_celltypes(adata, feature, comparator, out=out)
     else:
-        renderCompareFeatureToCelltypes(adata, feature, comparator, out=out)
+        render_compare_feature_to_celltypes(adata, feature, comparator, out=out)
 
-def renderCompareFeatureToCelltypes(adata, feature, comparator, out = None):
+def render_compare_feature_to_celltypes(adata, feature, comparator, out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
     fig, axes = plt.subplots(nrows=1, ncols=2, gridspec_kw={'wspace':0.4})
