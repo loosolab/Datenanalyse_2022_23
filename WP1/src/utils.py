@@ -1,12 +1,10 @@
-# This file contains wrapper and utility functions for
-# working with fragment files.
-
 import logging
 import os
+
+import numpy as np
 import pandas as pd
 import anndata as ad
-import scanpy as sc
-import fragment.calc as calc
+import src.calc as calc
 
 
 def read_fragment_file(abs_path: str):
@@ -131,14 +129,14 @@ def create_dataframe(frag_dictionary: dict, tissue=""):
     if tissue == "":
         for cellbarcode in frag_dictionary:
             mean_median_dictionary[cellbarcode] = {}
-            mean_median_dictionary[cellbarcode]["Mean"] = calc.compute_mean(frag_dictionary[cellbarcode])
-            mean_median_dictionary[cellbarcode]["Median"] = calc.compute_median(frag_dictionary[cellbarcode])
+            mean_median_dictionary[cellbarcode]["Mean"] = calc.calculate_mean(frag_dictionary[cellbarcode])
+            mean_median_dictionary[cellbarcode]["Median"] = calc.calculate_median(frag_dictionary[cellbarcode])
             mean_median_dictionary[cellbarcode]["Fragments"] = frag_dictionary[cellbarcode]
     else:
         for cellbarcode in frag_dictionary:
             mean_median_dictionary[tissue+"+"+cellbarcode] = {}
-            mean_median_dictionary[tissue+"+"+cellbarcode]["Mean"] = calc.compute_mean(frag_dictionary[cellbarcode])
-            mean_median_dictionary[tissue+"+"+cellbarcode]["Median"] = calc.compute_median(frag_dictionary[cellbarcode])
+            mean_median_dictionary[tissue+"+"+cellbarcode]["Mean"] = calc.calculate_mean(frag_dictionary[cellbarcode])
+            mean_median_dictionary[tissue+"+"+cellbarcode]["Median"] = calc.calculate_median(frag_dictionary[cellbarcode])
             mean_median_dictionary[cellbarcode]["Fragments"] = frag_dictionary[cellbarcode]
 
     # Transform dictionary into dataframe
@@ -157,10 +155,11 @@ def add_mean_to_h5ad(ann_data: ad.AnnData, fragment_dictionary: dict, tissue: st
     :param fragment_dictionary: dictionary containing cellbarcodes/list of fragment lengths.
     :param tissue: string of the belonging tissue.
     """
+
     # Iterate over fragment_dictionary
     for cellbarcode in fragment_dictionary:
         if tissue+"+"+cellbarcode in ann_data.obs_names:
-            ann_data.to_df().at[tissue+"+"+cellbarcode, "Mean"] = calc.compute_mean(fragment_dictionary[cellbarcode])
+            ann_data.to_df().at[tissue+"+"+cellbarcode, "Mean"] = calc.calculate_mean(fragment_dictionary[cellbarcode])
 
 
 def add_median_to_h5ad(ann_data: ad.AnnData, fragment_dictionary: dict, tissue: str):
@@ -176,4 +175,127 @@ def add_median_to_h5ad(ann_data: ad.AnnData, fragment_dictionary: dict, tissue: 
     # Iterate over fragment_dictionary
     for cellbarcode in fragment_dictionary:
         if tissue+"+"+cellbarcode in ann_data.obs_names:
-            ann_data.to_df().at[tissue+"+"+cellbarcode, "Mean"] = calc.compute_median(fragment_dictionary[cellbarcode])
+            ann_data.to_df().at[tissue+"+"+cellbarcode, "Mean"] = calc.calculate_median(fragment_dictionary[cellbarcode])
+
+
+def load_data(path: str, bins = 30):
+    """
+    This method creates an dataframe with cell barcode as index and colums
+    for fragment lengths ('Fragments'), fragment count ('Fragment-Count'),
+    fragment length distribution ('Distribution'), maxima position ('Maxima'),
+    maxima count ('Maxima-Count') und einen quality score ('Score').
+    :param path: path to a .bed file.
+    :param bins: resolution of the calculated distribution further calculations based on.
+    :return: dataframe with the colums specified above.
+    """
+    
+    # loding fragment_file and creating dataframe with fragments, fragment_count, mean and median
+    print('loading fragments...')
+    fragments = read_fragment_file(path)
+    df = create_dataframe(fragments)
+    df['Fragment-Count'] = [len(x) for x in df['Fragments']]
+
+    # calculate distribution in predifined bins and add it to the dataframe
+    print('calculate distribution...')
+    df['Distribution'] = get_distribution(df, bins = bins)
+    
+    # calculate maxima and their count and add them to the dataframe
+    print('calculate maxima...')
+    df['Maxima'] = get_maxima(df)
+    df['Maxima-Count'] = [len(x) for x in df['Maxima']]
+    
+    # calculate score and and add it to the dataframe
+    print('calculate score...')
+    get_score(df, bins = bins)
+    return df
+
+
+def get_distribution(df, bins=30):
+    """
+    This method scales a given dataframe with a column of fragment lengths and binnes them
+    to get the y-values of the distribution.
+    :param df: dataframe with a column for fragment lengths.
+    :param bins: resolution of the calculated distribution further calculations based on.
+    """
+    
+    # calculate list of bin_indexes over the range of fragment lengths
+    min_value = min(df['Fragments'].apply(min))
+    max_value = max(df['Fragments'].apply(max))
+    value_range = max_value - min_value
+    bin_scale = value_range / bins
+    bin_index = [x for x in np.arange(min_value, max_value, bin_scale)]
+    
+    # digitize fragment length vor every dataframe index into predefined bins
+    distribution = []
+    for i in df['Fragments']:
+        inds = np.digitize(i, bin_index)
+        
+        # count the elements in every bin to get the y-value every point in the distribution
+        y_values = []
+        for x in range(len(bin_index)):
+            y_values.append(np.count_nonzero(inds == x + 1))
+        distribution.append(y_values)
+    return distribution
+
+
+def get_maxima(df, distribution='Distribution'):
+    """
+    This method calculates the local maxima for every index in a dataframe.
+    :param df: dataframe with a kind of distribution column
+    :param distribution: column in a dataframe with arrays of values to calculate the maximas from
+    """
+    
+    # itterate over whole dataframe
+    maxima = []
+    for i in df[distribution]:
+        
+        # filter empty cells in the dataframe
+        if i is np.nan:
+            maxima.append(np.nan)
+        else:
+            # calculate local maxima
+            maxima.append(calc.calculate_maxima(i))
+            
+    return maxima
+
+
+def get_score(df, bins = 30):
+    """
+    Computes a score for each row of the dataframe and adds
+    a corresponding column "Score" containing each individual score.
+    The dataframe needs to have a column "Distribution" with
+    lists of numerical values to enable a reliable scoring.
+    If a score of a row could not be calculated, the value in
+    the new cell will be NaN.
+    :param dataframe: the dataframe to be extended
+    """
+
+    # Check if column "Distribution" exists
+    if "Distribution" not in df.columns:
+        print("Dataframe does not have a column Distribution!")
+        return
+
+    # Check if column "Score" exists, if not add it
+    if "Score" not in df.columns:
+        df["Score"] = np.NaN
+        
+    # Calculate bin_size
+    min_frag = min(df['Fragments'].apply(min))
+    max_frag = max(df['Fragments'].apply(max))
+    bin_size = (max_frag - min_frag) / bins
+
+    # Create empty score list
+    score_list = []
+
+    # Iterate over dataframe rows
+    for index, frame in df.iterrows():
+
+        # Compute Score for this row
+        score = calc.calculate_score(calc.calculate_maxima(df["Distribution"][index]), min_frag, bin_size, bins = bins)
+
+        # Append score list with computed value
+        score_list.append(score)
+
+    # Set the values of the column "Score" in the dataframe
+    df["Score"] = score_list
+    return score_list

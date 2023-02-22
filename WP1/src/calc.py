@@ -1,50 +1,112 @@
+# This file contains methods used for
+# different calculations.
 import math
 
 import numpy as np
-from scipy.stats import entropy
-from scipy.integrate import simpson
-import similaritymeasures as similaritymeasures
-from fit.calc import findLocalMaximaMinima, compute_local_maxima_diffMean, get_x_scale, get_sublist, closest
 
 
-# TODO: In load_data einbinden !
-def compute_score_df(dataframe):
+def calculate_mean(value_list: list, decimal_places=2):
     """
-    Computes a score for each row of the dataframe and adds
-    a corresponding column "Score" containing each individual score.
-    The dataframe needs to have a column "Distribution" with
-    lists of numerical values to enable a reliable scoring.
-    If a score of a row could not be calculated, the value in
-    the new cell will be NaN.
-    :param dataframe: the dataframe to be extended
+    This method computes the mean value out of a list
+    of values. The result is rounded to two decimal places.
+    :param value_list: list of values.
+    :param decimal_places: rounded to these decimal places.
+    :return: mean of the given list of values.
     """
 
-    # Check if column "Distribution" exists
-    if "Distribution" not in dataframe.columns:
-        print("Dataframe does not have a column Distribution!")
-        return
+    # Create variable to be returned
+    mean = 0
 
-    # Check if column "Score" exists, if not add it
-    if "Score" not in dataframe.columns:
-        dataframe["Score"] = np.NaN
+    # Iterate over value list
+    for length in value_list:
+        mean += length
 
-    # Create empty score list
-    score_list = []
+    mean = round(mean / len(value_list), decimal_places)
 
-    # Iterate over dataframe rows
-    for index, frame in dataframe.iterrows():
-
-        # Compute Score for this row
-        score = peak_avg_loc_diff(get_real_maxima(dataframe["Distribution"][index]))
-
-        # Append score list with computed value
-        score_list.append(score)
-
-    # Set the values of the column "Score" in the dataframe
-    dataframe["Score"] = score_list
+    return mean
 
 
-def get_real_maxima(value_list):
+def calculate_median(value_list: list):
+    """
+    This method computes the median value out of a list
+    of values.
+    :param value_list: list of values.
+    :return: median of the given list of values.
+    """
+
+    # Create sorted copy of list
+    sorted_list = sorted(value_list)
+
+    # Check if list length is even or odd
+    if is_even(sorted_list) is False:
+        # return middle value
+        middle_index = int(math.ceil(len(sorted_list)/2))
+        return sorted_list[middle_index-1]
+    else:
+        # Get the two values above/below middle index
+        middle_index = int(len(sorted_list)/2)
+
+        below = sorted_list[middle_index-1]
+        above = sorted_list[middle_index]
+
+        # return median value
+        return (above+below)/2
+
+
+def is_even(value_list: list):
+    """
+    This method checks if the length of a list is even.
+    :param value_list: list of values.
+    :return: True, if the length of the list is even, odd otherwise.
+    """
+    if len(value_list) % 2 == 0:
+        return True
+    return False
+
+
+def calculate_fragment_length(start: int, stop: int):
+    """
+    This method simply calculates the fragment length of the
+    two specified start/stop base pairs.
+    :param start: start position of the fragment (bp).
+    :param stop: stop position of the fragment (bp).
+    :return: length of the fragment.
+    """
+    return abs(start-stop)
+
+
+def normalize(array):
+    """
+    This method normalizes an array with the formula (a-min(a)/(max(a)-min(a)).
+    :param array: array to normalize
+    :return: normalized array.
+    """
+    array = np.asarray(array)
+    array_min = array.min()
+    array_max = array.max()
+    normalized_array = (array - array_min) / (array_max - array_min)
+    return normalized_array
+
+
+def calculate_xscale(df, bins=30):
+    """
+    This method normalizes an array with the formula (a-min(a)/(max(a)-min(a)).
+    :param df: dataframe with 'Fragments' column.
+    :return: x_scale with bin points over the range of fragment lengths.
+    """
+    # calculate bin scale over the range of fragment lengths
+    max_value = max(df['Fragments'].apply(max))
+    min_value = min(df['Fragments'].apply(min))
+    value_range = max_value - min_value
+    bin_scale = value_range/bins
+    
+    # return a numpy array with the beginning value of each bin
+    x_scale = [x for x in np.arange(min_value,max_value,bin_scale)]
+    x_scale = np.asarray(x_scale)
+    return x_scale
+
+
+def calculate_maxima(value_list):
     """
     This method computes all local maxima in a given list of numerical
     values using a "sliding window" to filter false-positive local maxima
@@ -105,7 +167,7 @@ def get_real_maxima(value_list):
     return local_maxima
 
 
-def peak_avg_loc_diff(peaks, period=160, min_frag=50, max_frag=700, bins=30):
+def calculate_score(peaks, min_frag, bin_size, bins=30, period=160):
     """
     Computes the average difference between the provided peak indices and
     the specified period. The calculation is divided into three cases:
@@ -122,7 +184,7 @@ def peak_avg_loc_diff(peaks, period=160, min_frag=50, max_frag=700, bins=30):
     :param peaks: list of peaks indices
     :param period: period in which the peaks should occur
     :param min_frag: length of the smallest fragment
-    :param max_frag: length of the largest fragment
+    :param bin_size: size of each bin
     :param bins: number of bins the peak indices will be mapped to
     """
 
@@ -132,8 +194,7 @@ def peak_avg_loc_diff(peaks, period=160, min_frag=50, max_frag=700, bins=30):
     # Create empty list for computed locations
     peak_bins = []
 
-    # Compute bin size
-    bin_size = (max_frag - min_frag) / bins
+
     for i in temp:
         if temp.index(i) in peaks:
             peak_bins.append(i * bin_size + min_frag)
