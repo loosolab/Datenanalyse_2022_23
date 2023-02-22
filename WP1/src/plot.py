@@ -83,7 +83,7 @@ def bindistplt(df, data='Fragments', column_name='Mean', bins=1, mode='equal', p
     # visualise data for every bin
     for i, s in enumerate(grouped_data):
         sns.histplot(s, bins=plot_bins, kde=True)
-        plt.title(f'Distribution of {data}\n({column_name}: {bin_start[i]}-{bin_end[i]}')
+        plt.title(f'Distribution of {data}\n({column_name}: {bin_start[i]}-{bin_end[i]})')
         plt.xlabel(data)
         plt.ylabel('Count')
 
