@@ -5,7 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
-def filter_by_cell_count(adata, threshold, key = "SCSA_pred_celltype"):
+def filter_by_cell_count(adata, threshold, key = "cell type"):
     """Filter the adata object by cells that have a higher count then threshold in the column described by key"""
     key_values = set(adata.obs[key])
     
@@ -15,7 +15,7 @@ def filter_by_cell_count(adata, threshold, key = "SCSA_pred_celltype"):
     
     for k, count in counts.items():
         if count < threshold:
-            adata = adata.obs[adata.obs[key] != k]
+            adata = adata[adata.obs[key] != k]
 
     return adata
 
@@ -147,19 +147,18 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
         
 
 def get_list(element) -> list:
-    """ Return a list with element (list or any)"""
-    list = []
-    if type(element) is list:
-        list.extend(element)
+    """ Return a list with element """
+    element_list = []
+    if type(element) is not list:
+        element_list.append(element)
     else:
-        list.append(element)
-    return list
+        element_list = element
+    return element_list
 
 def compare_dimensionreductions(adata, key: str or list, comparator: str or list, out=None, legend_loc="right margin"):
     """Create a Dimension reduction for each key and comparator, save to out"""
     # TODO: Test this
-    keys = get_list(key)
-    keys.append(get_list(comparator))
+    keys = [*get_list(key), *get_list(comparator)]
     sc.pl.umap(adata, color=keys, legend_loc=legend_loc)
     if out:
         createOutputDirectory(out)
@@ -191,13 +190,34 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, o
 def render_compare_feature_to_celltypes(adata, feature, comparator, out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
-    fig, axes = plt.subplots(nrows=1, ncols=2, gridspec_kw={'wspace':0.4})
+    
+    adata = filter_by_cell_count(adata, 10)
+    
+    groups = get_groups_with_size(adata, 5, comparator)
+    
+    fig, axes = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':1}, figsize=(20,4))
     sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
-    sc.pl.violin(adata, feature, groupby=comparator, ax = axes[1], rotation=90, show=False, ylabel="")
+    index = 1
+    for _, group in groups.items():
+        adata_tmp = adata[adata.obs[comparator].isin(group)]
+        sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axes[index], rotation=90, show=False, ylabel="")
+        index += 1
     if out:
         createOutputDirectory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
 
+def get_groups_with_size(adata, max_size, key="cell type"):
+    key_values = set(adata.obs[key])
+    bins = {}
+    index = 0
+    bins[index] = []
+    for value in key_values:
+        if len(bins[index]) == max_size :
+            index += 1
+            bins[index] = []
+        bins[index].append(value)
+    return bins
+                         
 def createOutputDirectory(out):
     """Creates the declared directory."""
     try:
