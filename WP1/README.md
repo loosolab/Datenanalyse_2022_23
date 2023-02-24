@@ -150,8 +150,8 @@ The argument "bins" determins the number of bins the data is devided in. For exa
 
     plot.bindistplt(df, column_name='Mean', bins = 2)
 <p align="center">
-   <img src="images/distribution_Fragments_Mean_99.33_107.0.png" />
-   <img src="images/distribution_Fragments_Mean_107.0_204.0.png" />
+   <img src="images/distribution_Fragments_Mean_99.33_107.0.png" height="80%"/>
+   <img src="images/distribution_Fragments_Mean_107.0_204.0.png" height="80%"/>
 </p>
 "Mode" changes how the size of the bins is calculated. "equal" means the same number of cells and "linear" means the same range of the variable in one bin.
 
