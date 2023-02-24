@@ -32,7 +32,7 @@ def violin_plots(adata, output, group=None, filtered=None, multi_panel=True, log
     else:
         item_list = filtered
     
-    createOutputDirectory(f"{output}violins/")
+    create_output_directory(f"{output}violins/")
             
     for item in item_list:
         sc.pl.violin(adata, keys=item, groupby=group, multi_panel=multi_panel, rotation=90, log=log)
@@ -62,7 +62,7 @@ def scatter_plots(adata, output, feature_filtered=None, celltype_filtered=None, 
     else:
         item_list = feature_filtered
         
-    createOutputDirectory(f"{output}images/")
+    create_output_directory(f"{output}images/")
 
     for itemx in item_list:
 
@@ -91,7 +91,7 @@ def simple_scatter(adata, output, feature=['n_fragments_in_CDS', 'n_total_fragme
     if display_all:
         feature = item_list
         
-    createOutputDirectory(f"{output}scatter")
+    create_output_directory(f"{output}scatter")
 
     for itemx in feature:
 
@@ -113,11 +113,11 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
         if not out.endswith('/'):
             print("Please specify valid Path ('/')")
             return
-        createOutputDirectory(out)
+        create_output_directory(out)
     except:
         print('First out exists')
         
-    createOutputDirectory(output)
+    create_output_directory(output)
     
     if celltype_filtered != None:
         celltype_of_interest = celltype_filtered
@@ -162,7 +162,7 @@ def compare_dimensionreductions(adata, key: str or list, comparator: str or list
     keys.append(get_list(comparator))
     sc.pl.umap(adata, color=keys, legend_loc=legend_loc)
     if out:
-        createOutputDirectory(out)
+        create_output_directory(out)
         if type(key) is list:
             filename = keys.join('_')
         else:
@@ -188,17 +188,42 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, o
     else:
         render_compare_feature_to_celltypes(adata, feature, comparator, out=out)
 
-def render_compare_feature_to_celltypes(adata, feature, comparator, out = None):
+def render_compare_feature_to_celltypes(adata, feature, comparator = 'cell type', out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
-    fig, axes = plt.subplots(nrows=1, ncols=2, gridspec_kw={'wspace':0.4})
-    sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
-    sc.pl.violin(adata, feature, groupby=comparator, ax = axes[1], rotation=90, show=False, ylabel="")
+    groups = sort_groups(adata, group_celltypes(adata, 5, comparator))
+    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4})
+    sc.pl.violin(adata, feature, ax = axs[0], show=False, ylabel=label)
+    for index, group in enumerate(groups):
+        sc.pl.violin(adata, feature, groupby=group, ax = axs[index+1], rotation=90, show=False, ylabel="")
     if out:
-        createOutputDirectory(out)
+        create_output_directory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
 
-def createOutputDirectory(out):
+def sort_groups(adata, groups, feature, key = 'cell type'):
+    adata_list = []
+    for group in groups:
+        adata_tmp = adata[adata.obs[key] == group]
+        max = adata_tmp.obs[feature].max()
+        min = adata_tmp.obs[feature].min()
+        adata_list.append({'data': adata_tmp, 'max': max, 'min': min})
+    adata_list.sort(lambda g: g['max'])
+
+
+
+def group_celltypes(adata, max_size = 5, key = 'cell type'):
+    groups = {}
+    index = 0
+    for item in adata.obs[key].unique():
+        if index not in groups:
+            groups[index] = []
+        if len(groups[index]) <= max_size:
+            groups[index].append(item)
+        else:
+            index += 1
+    return groups
+
+def create_output_directory(out):
     """Creates the declared directory."""
     try:
         os.mkdir(f"{out}")
