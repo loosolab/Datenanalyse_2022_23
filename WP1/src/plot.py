@@ -83,7 +83,7 @@ def bindistplt(df, data='Fragments', column_name='Mean', bins=1, mode='equal', p
     # visualise data for every bin
     for i, s in enumerate(grouped_data):
         sns.histplot(s, bins=plot_bins, kde=True)
-        plt.title(f'Distribution of {data}\n({column_name}: {bin_start[i]}-{bin_end[i]}')
+        plt.title(f'Distribution of {data}\n({column_name}: {bin_start[i]}-{bin_end[i]})')
         plt.xlabel(data)
         plt.ylabel('Count')
 
@@ -132,6 +132,10 @@ def multiplt(df, column_name='Fragment-Count', distribution='Distribution', bins
 
     # two loops, first for every bin, second for every datapoint in the defined bin space
     for i in np.arange(lower_limit, upper_limit, bin_scale):
+        if i == upper_limit - bin_scale:
+            last_bin = True
+        else:
+            last_bin = False
         for d in df.loc[(df[column_name] >= i) & (df[column_name] < i + bin_scale), distribution]:
 
             #  adjust y-values for the specific mode
@@ -146,6 +150,19 @@ def multiplt(df, column_name='Fragment-Count', distribution='Distribution', bins
             # save the subplot
             plt.plot(x_scale, ydata)
             count += 1
+            
+        if last_bin:
+            for d in df.loc[(df[column_name] == i + bin_scale), distribution]:
+                ydata = np.asarray(d)
+                if mode == 'normalize':
+                    ydata_min = ydata.min()
+                    ydata_max = ydata.max()
+                    ydata = (ydata - ydata_min) / (ydata_max - ydata_min)
+
+                elif mode == 'percent':
+                    ydata = ydata / sum(ydata)
+                plt.plot(x_scale, ydata)
+                count += 1
 
         # if there are no subplots, continue with new bin without plotting an empy plot
         if count == 0:
