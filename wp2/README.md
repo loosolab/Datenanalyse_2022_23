@@ -37,7 +37,8 @@ In the Chapter [Quick Start](#quick-start) you'll find an Introduction on how to
    2. [Feature Comparison in Violinplots](#Feature-Comparison-in-Violinplots)
 7. [References](#References)
 8. [Quick Start](#quick-start)
-9. [Authors](#Authors)
+   1. [Requirements](#Requirements)
+9.  [Authors](#Authors)
 
 ### The data source
 
@@ -390,6 +391,9 @@ The concept is similar to the previous mentioned function, but it focuses on `vi
 
 ### Quick Start
 
+#### Requirements
+
+To run our processing and presentation pipelines you will need to install the following packages. It might be the easiest way to set up a custom environment, either with `conda` or `virtualenv`.
 
 ### References
 
