@@ -186,22 +186,14 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, m
     else:
         render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
 
-def render_compare_feature_to_celltypes(adata, feature: str, comparator: str, filter_size: int, max_size: int, out = None):
+def render_compare_feature_to_celltypes(adata, feature, comparator = 'cell type', out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
-    
-    adata = filter_by_cell_count(adata, filter_size)
-    
-    groups = get_sorted_groups_with_size(adata, feature, max_size, comparator)
-    
-    fig, axes = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.2}, figsize=(18,12), sharey=True)
-    sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
-    index = 1
-    for _, group in groups.items():
-        adata_tmp = adata.X.copy()
-        adata_tmp = adata_tmp[adata_tmp.obs[comparator].isin(group)]
-        sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axes[index], rotation=90, show=False, ylabel="")
-        index += 1
+    groups = sort_groups(adata, group_celltypes(adata, 5, comparator))
+    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4})
+    sc.pl.violin(adata, feature, ax = axs[0], show=False, ylabel=label)
+    for index, group in enumerate(groups):
+        sc.pl.violin(adata, feature, groupby=group, ax = axs[index+1], rotation=90, show=False, ylabel="")
     if out:
         create_output_directory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
@@ -234,7 +226,6 @@ def get_sorted_groups_with_size(adata, feature, max_size, key = 'cell type'):
             bins[index] = []
         bins[index].append(group[0])
     return bins
-       
                          
 def create_output_directory(out):
     """Creates the declared directory."""
