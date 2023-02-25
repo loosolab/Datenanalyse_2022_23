@@ -168,7 +168,7 @@ def compare_dimensionreductions(adata, key: str or list, comparator: str or list
         plt.savefig(f'{out}umaps/{filename}.png')
     plt.close()
 
-def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, out=None):
+def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, out=None, sharey=True):
     """
     Wrapper function for `render_compare_feature_to_celltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
 
@@ -182,18 +182,21 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, m
         features = feature
         for feature in features:
             print(f'{feature}:')
-            render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
+            render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out, sharey=sharey)
     else:
-        render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
+        render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out, sharey=sharey)
 
-def render_compare_feature_to_celltypes(adata, feature, comparator = 'cell type', out = None):
+def render_compare_feature_to_celltypes(adata, feature, comparator = 'cell type', max_size=5, out=None, sharey=True):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
-    groups = sort_groups(adata, group_celltypes(adata, 5, comparator))
-    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4})
+    adata = filter_by_cell_count(adata, 5, comparator)
+    groups = get_sorted_groups_with_size(adata, feature, max_size, comparator)
+    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4}, figsize=(20,12), sharey=sharey)
     sc.pl.violin(adata, feature, ax = axs[0], show=False, ylabel=label)
-    for index, group in enumerate(groups):
-        sc.pl.violin(adata, feature, groupby=group, ax = axs[index+1], rotation=90, show=False, ylabel="")
+    for index, group in groups.items():
+        adata_tmp = adata.copy()
+        adata_tmp = adata_tmp[adata_tmp.obs[comparator].isin(group)]
+        sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axs[index+1], rotation=90, show=False, ylabel="")
     if out:
         create_output_directory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
@@ -203,17 +206,16 @@ def get_sorted_groups_with_size(adata, feature, max_size, key = 'cell type'):
         adata.uns['cell groups'] = {}
     groups = adata.obs[key].unique()
     for group in groups:
-        adata = adata[adata.obs[key] == group]
+        adata_tmp = adata.copy()
+        adata_tmp = adata[adata.obs[key] == group]
         if group not in adata.uns['cell groups']:
             adata.uns['cell groups'][group] = {}
         if feature not in adata.uns['cell groups'][group]:
-            adata.uns['cell groups'][group] = { 
-                feature: {
-                    'min':  adata.obs[feature].min(),
-                    'max':  adata.obs[feature].max(),
-                    'mean': adata.obs[feature].mean()
+            adata.uns['cell groups'][group][feature] =  {
+                    'min':  adata_tmp.obs[feature].min(),
+                    'max':  adata_tmp.obs[feature].max(),
+                    'mean': adata_tmp.obs[feature].mean()
                 }
-            }
             
     sorted_groups = sorted(adata.uns['cell groups'].items(), reverse=True, key=lambda v: v[1][feature]['max'] - v[1][feature]['min'])
     
