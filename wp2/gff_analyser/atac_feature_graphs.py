@@ -198,7 +198,8 @@ def render_compare_feature_to_celltypes(adata, feature: str, comparator: str, fi
     sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
     index = 1
     for _, group in groups.items():
-        adata_tmp = adata[adata.obs[comparator].isin(group)]
+        adata_tmp = adata.X.copy()
+        adata_tmp = adata_tmp[adata_tmp.obs[comparator].isin(group)]
         sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axes[index], rotation=90, show=False, ylabel="")
         index += 1
     if out:
