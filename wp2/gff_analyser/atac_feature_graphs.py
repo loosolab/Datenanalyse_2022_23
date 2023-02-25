@@ -32,7 +32,7 @@ def violin_plots(adata, output, group=None, filtered=None, multi_panel=True, log
     else:
         item_list = filtered
     
-    createOutputDirectory(f"{output}violins/")
+    create_output_directory(f"{output}violins/")
             
     for item in item_list:
         sc.pl.violin(adata, keys=item, groupby=group, multi_panel=multi_panel, rotation=90, log=log)
@@ -62,7 +62,7 @@ def scatter_plots(adata, output, feature_filtered=None, celltype_filtered=None, 
     else:
         item_list = feature_filtered
         
-    createOutputDirectory(f"{output}images/")
+    create_output_directory(f"{output}images/")
 
     for itemx in item_list:
 
@@ -91,7 +91,7 @@ def simple_scatter(adata, output, feature=['n_fragments_in_CDS', 'n_total_fragme
     if display_all:
         feature = item_list
         
-    createOutputDirectory(f"{output}scatter")
+    create_output_directory(f"{output}scatter")
 
     for itemx in feature:
 
@@ -113,11 +113,11 @@ def multi_plot(adata, feature1, feature2, group, out, celltype_filtered=None, mu
         if not out.endswith('/'):
             print("Please specify valid Path ('/')")
             return
-        createOutputDirectory(out)
+        create_output_directory(out)
     except:
         print('First out exists')
         
-    createOutputDirectory(output)
+    create_output_directory(output)
     
     if celltype_filtered != None:
         celltype_of_interest = celltype_filtered
@@ -157,11 +157,10 @@ def get_list(element) -> list:
 
 def compare_dimensionreductions(adata, key: str or list, comparator: str or list, out=None, legend_loc="right margin"):
     """Create a Dimension reduction for each key and comparator, save to out"""
-    # TODO: Test this
     keys = [*get_list(key), *get_list(comparator)]
     sc.pl.umap(adata, color=keys, legend_loc=legend_loc)
     if out:
-        createOutputDirectory(out)
+        create_output_directory(out)
         if type(key) is list:
             filename = keys.join('_')
         else:
@@ -169,7 +168,7 @@ def compare_dimensionreductions(adata, key: str or list, comparator: str or list
         plt.savefig(f'{out}umaps/{filename}.png')
     plt.close()
 
-def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, out=None):
+def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, out=None):
     """
     Wrapper function for `render_compare_feature_to_celltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
 
@@ -183,19 +182,19 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, o
         features = feature
         for feature in features:
             print(f'{feature}:')
-            render_compare_feature_to_celltypes(adata, feature, comparator, out=out)
+            render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
     else:
-        render_compare_feature_to_celltypes(adata, feature, comparator, out=out)
+        render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
 
-def render_compare_feature_to_celltypes(adata, feature, comparator, out = None):
+def render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
     
     adata = filter_by_cell_count(adata, 10)
     
-    groups = get_groups_with_size(adata, 5, comparator)
+    groups = get_sorted_groups_with_size(adata, feature, max_size, comparator)
     
-    fig, axes = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':1}, figsize=(20,4))
+    fig, axes = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.2}, figsize=(18,12), sharey=True)
     sc.pl.violin(adata, feature, ax = axes[0], show=False, ylabel=label)
     index = 1
     for _, group in groups.items():
@@ -206,19 +205,37 @@ def render_compare_feature_to_celltypes(adata, feature, comparator, out = None):
         createOutputDirectory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
 
-def get_groups_with_size(adata, max_size, key="cell type"):
-    key_values = set(adata.obs[key])
+def get_sorted_groups_with_size(adata, feature, max_size, key = 'cell type'):
+    if 'cell groups' not in adata.uns:
+        adata.uns['cell groups'] = {}
+    groups = adata.obs[key].unique()
+    for group in groups:
+        adata = adata[adata.obs[key] == group]
+        if group not in adata.uns['cell groups']:
+            adata.uns['cell groups'][group] = {}
+        if feature not in adata.uns['cell groups'][group]:
+            adata.uns['cell groups'][group] = { 
+                feature: {
+                    'min':  adata.obs[feature].min(),
+                    'max':  adata.obs[feature].max(),
+                    'mean': adata.obs[feature].mean()
+                }
+            }
+            
+    sorted_groups = sorted(adata.uns['cell groups'].items(), reverse=True, key=lambda v: v[1][feature]['max'] - v[1][feature]['min'])
+    
     bins = {}
     index = 0
     bins[index] = []
-    for value in key_values:
-        if len(bins[index]) == max_size :
+    for group in sorted_groups:
+        if len(bins[index]) == max_size:
             index += 1
             bins[index] = []
-        bins[index].append(value)
+        bins[index].append(group[0])
     return bins
+       
                          
-def createOutputDirectory(out):
+def create_output_directory(out):
     """Creates the declared directory."""
     try:
         os.mkdir(f"{out}")
