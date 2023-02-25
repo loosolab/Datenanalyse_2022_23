@@ -186,11 +186,11 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, m
     else:
         render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out=out)
 
-def render_compare_feature_to_celltypes(adata, feature, comparator, max_size, out = None):
+def render_compare_feature_to_celltypes(adata, feature: str, comparator: str, filter_size: int, max_size: int, out = None):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
     
-    adata = filter_by_cell_count(adata, 10)
+    adata = filter_by_cell_count(adata, filter_size)
     
     groups = get_sorted_groups_with_size(adata, feature, max_size, comparator)
     
@@ -202,7 +202,7 @@ def render_compare_feature_to_celltypes(adata, feature, comparator, max_size, ou
         sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axes[index], rotation=90, show=False, ylabel="")
         index += 1
     if out:
-        createOutputDirectory(out)
+        create_output_directory(out)
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
 
 def get_sorted_groups_with_size(adata, feature, max_size, key = 'cell type'):
