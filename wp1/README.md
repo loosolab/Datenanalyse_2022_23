@@ -12,11 +12,12 @@ and their functionality along the way. We also provided a compact [Quick Start](
    3. [Distribution by Variable](#distibution-by-variable)
    4. [scDistribution by Variable](#scdistribution-by-variable)
 4. [Calculating a score](#Calculating-a-score)
-5. [Splitting fragments](#Splitting-fragments)
-6. [Outlook](#outlook)
-7. [References](#References)
-8. [Quick Start](#testing)
-9. [Authors](#Authors)
+5. [Profile Plots](#profile-plots)
+6. [Splitting fragments](#Splitting-fragments)
+7. [Outlook](#outlook)
+8. [References](#References)
+9. [Quick Start](#testing)
+10. [Authors](#Authors)
 
 ### The data source
 
@@ -294,7 +295,56 @@ When we increase the fragment count we also get a better score.
       
 Hence, we are now able to also include the amount of fragments of a cell into our score, which is a major component in evaluating
 cells from fragment files.
+
+### Profile Plots
+
+To look at the fragment distribution around a TSS, we plot the fragments from the BED file in a window of 2000bp around the TSS that were extracted from the GTF file. To do so we use the: 
+    plot.splitandprofileplt(df, tss_positions, half_window_width =1000) 
+
+<p align="center">
+   <img src="images/profile_plot.png" width="60%"/>
+</p>
+
+When you look at the fragment distribution around TSS per tissue sample, you can notices a big peak just towards the left of the TSS. However, the plot itself doesn't give any information about the nucleosome distribution or chromatin accessibility at the TSS. 
+
 ### Splitting fragments
+
+To get an idea of the nucleosome distribution, we first need to filter the fragments that may contain a nucleosome. Filtering by fragment lengths is a reasonable approach because the typical size of a nucleosome is approximately 150bp. Therefore, we can first categorize fragments with fragment length > 160bp as fragments with nucleosomes (or long fragments). 
+
+To these splitting of fragments, the function **plot.splitandprofileplt** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
+For e.g: we can use
+    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160) 
+to generate the following plot:
+
+<p align="center">
+   <img src="images/2_categories_160.png" width="60%"/>
+</p>
+
+It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. 
+
+Here are the plots when we try to split fragments for different fragment lengths: 
+<p align="center">
+   <img src="images/2_categories_40.png" width="50%"/><img src="images/2_categories_80.png" width="50%"/>
+</p>
+<p align="center">
+    <img src="images/2_categories_120.png" width="50%"/><img src="images/2_categories_160.png" width="50%"/>
+</p>
+<p align="center">
+    <img src="images/2_categories_200.png" width="50%"/><img src="images/2_categories_240.png" width="50%"/>
+</p>
+From these images, we can observe that the split at 160bp provides the maximum information. On one hand the dip for short fragments is visible and on the other hand the 2 peaks for the long fragments are distinguishable.
+
+We can further split the long fragments into long and very long fragments by passing an additional **split_point_2** as parameter
+
+    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160,  split_point_2 = 320) 
+
+to produce the following plot :
+
+<p align="center">
+   <img src="images/3_categories_160_320.png" />
+</p>
+
+Here we can additionally notice that the peaks for the very long fragments are flatter and wider spread hinting towards the presence of histones in these regions. 
 
 ### Outlook
 
