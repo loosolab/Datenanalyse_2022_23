@@ -1,13 +1,5 @@
 ### Introduction
 
-This Folder contains the tools and methods developed for WP2 for the course
-“Applied data analysis in bioinformatics” from the masters program “Bioinformatik und Systembiologie”
-at the Justus-Liebig-University and the Technische Hochschule Mittelhessen in the winter term 2022/2023.
-</br>The goal of this course is to develop a pipeline for the [Max Planck Institute for Heart and Lung Research](https://www.mpg.de/149809/heart-lung-research)
-which takes data from [CATLAS](http://catlas.org/humanenhancer/#!/) and performs distinct analyses mainly based on the
-chromatin accessibility for different human tissues<sup>[1](#--1-zhang-k-hocker-j-d-miller-m-hou-x-chiou-j-poirion-o-b-qiu-y-li-y-e-gaulton-k-j-wang-a-preissl-s-amp-ren-b--2021---a-single-cell-atlas-of-chromatin-accessibility-in-the-human-genome-cell-184--24---httpsdoiorg101016jcell202110024)</sup>.
-Furthermore, this pipeline is organized into two separate packages (WP1/WP2) due to the group distribution in the course.
-
 This WP worked on tools that generates and adds new data to the already existing
 [Anndata](https://anndata.readthedocs.io/en/latest/)<sup>[2](#font-size1---2-httpsscanpyreadthedocsioenstable-font)</sup>
 Object from [CATLAS](http://catlas.org/humanenhancer/#!/) and visualizing them.
@@ -82,7 +74,7 @@ The fourth and fifth Column in this line describes the Start and Stop Position o
 genome. For later calculations it is mandatory to generate separate [GFF](https://www.ensembl.org/info/website/upload/gff.html) files,
 where each file containing only lines with the same feature. We talk on how to use the provided tools for
 generating these files in the next Chapter.</br>
-The location of a read inside a [fragment](../wp1/README.md) file, can be found in the second and third column of a line.
+The location of a read inside a [fragment](../WP1/README.md) file, can be found in the second and third column of a line.
 By counting the number of reads from the fragment file that's position is inside the location of a feature
 from the reference genome we can finally calculate the feature overlap rate and store it to the
 [Anndata](https://anndata.readthedocs.io/en/latest/) object.
