@@ -7,11 +7,11 @@ and their functionality along the way. We also provided a compact [Quick Start](
 1. [The data source](#The-data-source)
 2. [Reading a fragment file](#Reading-a-fragment-file)
 3. [Plotting](#Plotting)
-   1. [Mean and Median](#Mean-and-Median)
-   2. [Distribution into groups](#Distribution-into-groups)
-4. [Distribution per cell](#Distribution-per-cell)
-   1. [Calculate the fit](#Calculate-the-fit)
-   2. [Calculate a score](#Calculate-a-score)
+   1. [Variable Distribution](#variable-distribution)
+   2. [Variable Comparison](#variable-comparison)
+   3. [Distribution by Variable](#distibution-by-variable)
+   4. [scDistribution by Variable](#scdistribution-by-variable)
+4. [Calculating a score](#Calculating-a-score)
 5. [Splitting fragments](#Splitting-fragments)
 6. [Outlook](#outlook)
 7. [References](#References)
@@ -187,7 +187,7 @@ Furthermore the range that gets binned can be specified by the arguments "upper_
    <img src="images/percent_distribution_1_cells_Mean_150.0_200.0.png" width="45%"/>
 </p>
 
-#### Calculate a score
+#### Calculating a score
 
 Having lists of fragment lengths linked to individual cells is great, but it would also be nice to have a numerical value which
 enables an interpretation regarding the quality of the data. Following this specification we developed such a scoring function that follows two
@@ -298,6 +298,30 @@ cells from fragment files.
 
 ### Outlook
 
+This pipeline is by no means finished and still has a good potential for further development.
+One major aspect we are looking into is refining the score. To this date we have tried a lot of different approaches. Many of the functions used in these attempts are located in
+the __experimental__ package, where all of them are based on the comparison between a fit and a benchmark function. Both of these are calculated based on the fragment length distribution. 
+The fit function being the __is state__ and the benchmark function the __should state__. The latter is mainly based on a function mentioned in "A single-cell atlas of chromatin accessibility in the human genome" from Zhan et al<sup>[1](#font-size1---1-zhang-k-hocker-j-d-miller-m-hou-x-chiou-j-poirion-o-b-qiu-y-li-y-e-gaulton-k-j-wang-a-preissl-s-amp-ren-b--2021---a-single-cell-atlas-of-chromatin-accessibility-in-the-human-genome-cell-184--24---httpsdoiorg101016jcell202110024-font)</sup>.
+
+We have prepared a list with all approaches we have tried so far but turned out to be not sufficient for a consistent score.
+
+- KL-Divergence<sup>[5](#font-size1---5-httpswwwcountbayesiecomblog201759kullback-leibler-divergence-explained)</sup>
+- Local Maxima Difference
+- Mean of local maxima difference 
+- PCM difference<sup>[6](#font-size1---8-witowski-katharina--stander-nielen--2012---parameter-identification-of-hysteretic-models-using-partial-curve-mapping-10251462012-5580)</sup>
+- Discrete Frechet Distance<sup>[7](#font-size1---7-eiter-thomas-and-heikki-mannila--computing-discrete-fréchet-distance---1994--)</sup>
+- Integral Difference
+- Area between both functions
+- Curve length based similarity measure<sup>[8](#font-size1---8-a-andrade-campos-r-de-carvalho-and-r-a-f-valente-novel-criteria-for-determina--tion-of-material-model-parameters-international-journal-of-mechanical-sciences-54--1---294305-2012-issn-0020-7403-doi--httpsdoiorg101016jijmecsci201111010-)</sup>
+- Dynamic Time Warping<sup>[9](#font-size1---9-donald-j-berndt-and-james-clifford-using-dynamic-time-warping-to-find-pat--terns-in-time-series-in-proceedings-of-the-3rd-international-conference-on-knowledge-discovery-and-data-mining-aaaiws94-pages-359370-aaai-press-1994)</sup>
+
+Besides using the points above as a stand-alone score, we also tested a multitude of combinations
+ranging from two to all the approaches. We conclude that these techniques are not appropriate for a interpretable 
+and most of all consistent single numerical value. 
+
+Nevertheless, we do not claim the accuracy of the above statements. In our opinion, it may still be possible to develop a valid score using these approaches. However, we have not been able to do so.  
+
+In addition, we plan to be able to compute not only a single score for a cell, but a multiple of scores for different categories, although the determination of these categories is still pending. Thus, the score would have more depth and interpretation possibilities.
 ### Quick Start
 
 HIER WENIG ERKLÄRUNG UND GLEICH MIT CODE LOSLEGEN
@@ -310,7 +334,11 @@ AUCH AUF TESTDATENSATZ EINGEHEN
 #### <font size=1>- [2] https://en.wikipedia.org/wiki/BED_(file_format) </font>
 #### <font size=1>- [3] https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html </font> 
 #### <font size=1>- [4] http://www.inf.fu-berlin.de/lehre/SS12/ALP2/slides/V6_Rekursion_vs_Iteration_ALP2.pdf
-
+#### <font size=1>- [5] https://www.countbayesie.com/blog/2017/5/9/kullback-leibler-divergence-explained
+#### <font size=1>- [6] Witowski, Katharina & Stander, Nielen. (2012). Parameter Identification of Hysteretic Models Using Partial Curve Mapping. 10.2514/6.2012-5580. 
+#### <font size=1>- [7] Eiter, Thomas, and Heikki Mannila. "Computing discrete Fréchet distance." (1994).
+#### <font size=1>- [8] A Andrade-Campos, R De-Carvalho, and R A F Valente. Novel criteria for determina- tion of material model parameters. International Journal of Mechanical Sciences, 54 (1):294–305, 2012. ISSN 0020-7403. doi: https://doi.org/10.1016/j.ijmecsci.2011.11.010.
+#### <font size=1>- [9] Donald J Berndt and James Clifford. Using Dynamic Time Warping to Find Pat- terns in Time Series. In Proceedings of the 3rd International Conference on Knowledge Discovery and Data Mining, AAAIWS’94, pages 359–370. AAAI Press, 1994.
 
 ### Authors
 
