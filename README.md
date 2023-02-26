@@ -17,10 +17,11 @@ Furthermore, this pipeline is organized into two separate packages (WP1/WP2) due
   - The second part of the pipeline contains functions for calculating the feature overlap for each cell barcode to a given feature and visualize the calculated data with different plots.
 
 Each package also contains a rich __README__ explaining all features and their functionality and how to use them. The slides of the final presentation held on the 01.03.23 can be taken from __presentation.pdf__.
-To increase the understanding we developed a graphical representation of our pipeline, which can be seen below.
+To increase the understanding of the whole pipeline we developed a graphical representation, which can be seen below.
 
 <p align="center">
   <img src="images/pipe.png" width="90%">
 </p>
 
-More detailed pictures of the two individual parts are given in their representative subfolders.
+This representation in terms of functionality can be divided into the two packages as follows. The first starts on the left with the reading of the .bed files, followed by two interlocking gears, the quality control functions and parameters and the visualization of these. The result after these two steps is an __AnnData object__, which in turn is further used by the second package.
+Here, this object is then additionally filled with information from further .bed and .gtf files. After that, another process of two gears takes place, which is divided into a feature overlap calculation and a visualization step. The result of our pipeline is a rich AnnData object ready for even further analysis. More details are given in the corresponding subfolders.
