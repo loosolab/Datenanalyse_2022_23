@@ -299,6 +299,7 @@ cells from fragment files.
 ### Profile Plots
 
 To look at the fragment distribution around a TSS, we plot the fragments from the BED file in a window of 2000bp around the TSS that were extracted from the GTF file. To do so we use the: 
+
     plot.splitandprofileplt(df, tss_positions, half_window_width =1000) 
 
 <p align="center">
@@ -313,7 +314,9 @@ To get an idea of the nucleosome distribution, we first need to filter the fragm
 
 To these splitting of fragments, the function **plot.splitandprofileplt** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
 For e.g: we can use
+
     plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160) 
+
 to generate the following plot:
 
 <p align="center">
