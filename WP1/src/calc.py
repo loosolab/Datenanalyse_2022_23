@@ -100,8 +100,11 @@ def calculate_xscale(df, bins=30):
     value_range = max_value - min_value
     bin_scale = value_range/bins
     
-    # return a numpy array with the beginning value of each bin
+    # create a array with the beginning value of each bin
     x_scale = [x for x in np.arange(min_value,max_value,bin_scale)]
+    # check for error (scale to big)
+    while len(x_scale) > bins:
+        x_scale.pop()
     x_scale = np.asarray(x_scale)
     return x_scale
 
