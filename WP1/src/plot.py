@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import src.calc as calc
+import src.utils as utils
 
 
 def bindistplt(df, data='Fragments', column_name='Mean', bins=1, mode='equal', plot_bins=50, show=True, output_path=None):
@@ -190,6 +191,66 @@ def multiplt(df, column_name='Fragment-Count', distribution='Distribution', bins
     return
 
 
+def splitandprofileplt(df, tss_positions, half_window_width, split_point_1=None, split_point_2=None):
+    """
+    This splits dataframe into different categories on the basis of fragment lengths 
+    and then plots the profiles over TSS for these categories.
+    :param df: dataframe of the bed file.
+    :param tss_positions: a set of tss positions (see HTSeq.GFF_Reader, utils.get_TSS_set_from_GTF_file).
+    :param split_point_1: fragment length value at which the split into two categories takes place.
+    :param split_point_2: fragment length value at which the split into the third category takes place.
+    """
+    
+    #No splitting of fragments
+    if split_point_1 == None:
+        genomic_array = utils.get_genomic_array_from_BED_dataframe(df)
+        profile = utils.get_profile_for_plots(genomic_array, tss_positions, half_window_width)
+        label = "All fragment lenghts"
+        profiles = [profile]
+        labels = [label]
+        
+    #Splitting at a single point.
+    elif split_point_2 == None:
+        short_fragments_df = df.loc[df['End']-df['Start'] <= split_point_1]
+        long_fragments_df = df.loc[df['End']-df['Start'] > split_point_1]
+    
+        genomic_array_1 = utils.get_genomic_array_from_BED_dataframe(short_fragments_df)
+        genomic_array_2 = utils.get_genomic_array_from_BED_dataframe(long_fragments_df)
+    
+        profile_1 = utils.get_profile_for_plots(genomic_array_1, tss_positions, half_window_width)
+        profile_2 = utils.get_profile_for_plots(genomic_array_2, tss_positions, half_window_width)
+    
+        label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
+        label_2 = "Long fragments : > "+ str(split_point_1) +"bp"
+        
+        profiles = [profile_1, profile_2]
+        labels = [label_1, label_2]
+    
+    #Splitting at two points.
+    else:
+        short_fragments_df = df.loc[df['End']-df['Start'] <= split_point_1]
+        long_fragments_df = df.loc[(df['End']-df['Start'] > split_point_1) & (df['End']-df['Start'] <= split_point_2)]
+        verylong_fragments_df = df.loc[df['End']-df['Start'] > split_point_2]
+    
+        genomic_array_1 = utils.get_genomic_array_from_BED_dataframe(short_fragments_df)
+        genomic_array_2 = utils.get_genomic_array_from_BED_dataframe(long_fragments_df)
+        genomic_array_3 = utils.get_genomic_array_from_BED_dataframe(verylong_fragments_df)
+    
+        profile_1 = utils.get_profile_for_plots(genomic_array_1, tss_positions, half_window_width)
+        profile_2 = utils.get_profile_for_plots(genomic_array_2, tss_positions, half_window_width)
+        profile_3 = utils.get_profile_for_plots(genomic_array_3, tss_positions, half_window_width)
+    
+        label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
+        label_2 = "Long fragments : "+ str(split_point_1) +" - "+ str(split_point_2) +"bp"
+        label_3 = "Very long fragments : > "+ str(split_point_2) +"bp"
+        
+        profiles = [profile_1, profile_2, profile_3]
+        labels = [label_1, label_2, label_3]
+    
+    profplt(profiles, labels, half_window_width)
+    return
+
+
 def histplt(df, column_name, output=None, bins=50):
     # plots a histogram for a specific variable in a dataframe
     # Uses Seaborn library to plot.
@@ -239,5 +300,36 @@ def vioplt(df, column_name, output=None):
     if output != None:
         plt.savefig(f'{output}{column_name}_vio.png', bbox_inches='tight')
          
+    plt.show()
+    return
+
+
+def profplt(profile_array, label_array, half_window_width, output = None):
+    # Plots profile plots for one or more profiles.
+    # the output parameter is the path for saving the plot.
+    
+    fig, ax = plt.subplots()             
+    x = np.arange(-half_window_width, half_window_width) 
+    
+    #Plots for individual profiles
+    for index, profile in enumerate(profile_array):
+        if index == 0:
+            ax.plot(x, profile, label = label_array[index])
+        else:
+            ax.plot(x, profile, label = label_array[index],  linestyle = '--')
+    
+    #Set Labels
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, loc = 'upper right')
+    
+    #Set Grid
+    plt.grid(which='major', color='#DDDDDD', linewidth=0.8)
+    plt.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+    plt.minorticks_on()
+    
+    #Save plot
+    if output != None:
+        plt.savefig(f'{output}_TSS_profile.png', bbox_inches='tight')
+        
     plt.show()
     return
