@@ -302,7 +302,7 @@ To look at the fragment distribution around a TSS, we plot the fragments from th
     plot.splitandprofileplt(df, tss_positions, half_window_width =1000) 
 
 <p align="center">
-   <img src="images/profile_plot.png" width="60%"/>
+   <img src="images/profile_plot.png" width="45%"/>
 </p>
 
 When you look at the fragment distribution around TSS per tissue sample, you can notices a big peak just towards the left of the TSS. However, the plot itself doesn't give any information about the nucleosome distribution or chromatin accessibility at the TSS. 
@@ -317,7 +317,7 @@ For e.g: we can use
 to generate the following plot:
 
 <p align="center">
-   <img src="images/2_categories_160.png" width="60%"/>
+   <img src="images/2_categories_160.png" width="45%"/>
 </p>
 
 It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. 
