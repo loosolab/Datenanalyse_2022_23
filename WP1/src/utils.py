@@ -178,7 +178,7 @@ def add_median_to_h5ad(ann_data: ad.AnnData, fragment_dictionary: dict, tissue: 
             ann_data.to_df().at[tissue+"+"+cellbarcode, "Mean"] = calc.calculate_median(fragment_dictionary[cellbarcode])
 
 
-def load_data(path: str, bins = 30):
+def load_data(path: str, bins = 30, penalty = 200):
     """
     This method creates an dataframe with cell barcode as index and colums
     for fragment lengths ('Fragments'), fragment count ('Fragment-Count'),
@@ -206,7 +206,7 @@ def load_data(path: str, bins = 30):
     
     # calculate score and and add it to the dataframe
     print('calculate score...')
-    get_score(df, bins = bins)
+    get_score(df, bins = bins, penalty = penalty)
     return df
 
 
@@ -259,7 +259,7 @@ def get_maxima(df, distribution='Distribution'):
     return maxima
 
 
-def get_score(df, bins = 30):
+def get_score(df, bins = 30, penalty = 200):
     """
     Computes a score for each row of the dataframe and adds
     a corresponding column "Score" containing each individual score.
@@ -292,6 +292,11 @@ def get_score(df, bins = 30):
 
         # Compute Score for this row
         score = calc.calculate_score(calc.calculate_maxima(df["Distribution"][index]), min_frag, bin_size, bins = bins)
+        
+        # add penalty for fragment count
+        if df['Fragment-Count'][index] < penalty:
+            score = score + (penalty - df['Fragment-Count'][index])
+        score = score*(1/np.log(df['Fragment-Count'][index]))
 
         # Append score list with computed value
         score_list.append(score)
