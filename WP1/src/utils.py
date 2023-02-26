@@ -1,9 +1,11 @@
 import logging
 import os
+import itertools
 
 import numpy as np
 import pandas as pd
 import anndata as ad
+import HTSeq
 import src.calc as calc
 
 
@@ -304,3 +306,71 @@ def get_score(df, bins = 30, penalty = 200):
     # Set the values of the column "Score" in the dataframe
     df["Score"] = score_list
     return score_list
+
+
+def get_dataframe_from_BED_file(bed_file):
+    
+    #read bed file
+    bedfile = open(bed_file, "r")
+    
+    #get data from file
+    frag_list = []
+    for line in bedfile:
+        chrom, start, end, cell, value, etc = line.strip().split()
+        frag_list.append([chrom, start, end, cell, value, etc])
+        
+    #create a dataframe
+    frag_df = pd.DataFrame(data = frag_list, columns = ['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand'])
+
+    #Typecasting
+    frag_df.Start = pd.to_numeric(frag_df.Start, downcast='integer')
+    frag_df.End = pd.to_numeric(frag_df.End, downcast='integer')
+    frag_df.Score = pd.to_numeric(frag_df.Score, downcast='float')
+    
+    return frag_df
+
+
+def get_genomic_array_from_BED_dataframe(data_frame):
+    
+    #Create Genomic Array (coverage)
+    coverage = HTSeq.GenomicArray("auto", stranded=False, typecode="i")
+    
+    #add entries from dataframe to genomic array
+    for row in data_frame.itertuples():
+        coverage[HTSeq.GenomicInterval(row.Chromosome, int(row.Start), int(row.End), row.Strand)] += 1
+        
+    return coverage
+
+
+def get_TSS_set_from_GTF_file(gtf_file):
+    
+    #read gtf file
+    gtffile = HTSeq.GFF_Reader(gtf_file)
+    
+    #Add TSS data in a set.
+    tsspos = set()
+    for feature in gtffile:
+        if feature.type == "exon" and feature.attr["exon_number"] == "1":
+            tsspos.add(feature.iv.start_d_as_pos)
+    
+    return tsspos
+
+
+def get_profile_for_plots(genomic_array, tss_positions, half_window_width = 500):
+    
+    #profile is an array that stores y-values for the plot
+    #initialize profile
+    profile = np.zeros(2*half_window_width, dtype='i')
+    
+    #update profile at all TSS positions.
+    for p in tss_positions:
+        start = p.pos - half_window_width
+        if(start<0): continue
+        window = HTSeq.GenomicInterval(p.chrom, p.pos - half_window_width, p.pos + half_window_width, ".")
+        wincvg = np.fromiter(genomic_array[window], dtype='i', count=2*half_window_width)
+        if p.strand == "+":
+            profile += wincvg
+        else:
+            profile += wincvg[::-1]
+    
+    return profile
