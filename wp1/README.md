@@ -1,17 +1,6 @@
-# THIS README IS NOT FINISHED AND STILL IN DEVELOPEMENT!!!
-
 ### Introduction
 
-This repository contains all the tools and methods developed specifically for the course 
-“Applied data analysis in bioinformatics” from the masters program “Bioinformatik und Systembiologie” 
-at the Justus-Liebig-University and the Technische Hochschule Mittelhessen in the wintern term 2022/2023.
-
-The goal of this course is to develop a pipeline for the [Max Planck Institute for Heart and Lung Research](https://www.mpg.de/149809/heart-lung-research)
-which takes data from [CATLAS](http://catlas.org/humanenhancer/#!/) and performs distinct analyses mainly based on the so-called chromatin accessibility<sup>[1](#--1-zhang-k-hocker-j-d-miller-m-hou-x-chiou-j-poirion-o-b-qiu-y-li-y-e-gaulton-k-j-wang-a-preissl-s-amp-ren-b--2021---a-single-cell-atlas-of-chromatin-accessibility-in-the-human-genome-cell-184--24---httpsdoiorg101016jcell202110024)</sup>.   
-Furthermore, this pipeline is organized into two separate packages (WP1/WP2) due to the group distribution in the course. Hence, the main purpose of
-these methods is to be used by the second group (WP2), but they can nevertheless be used as a stand-alone tool. A graphical representation of our pipeline is given in the [appendix](#appendix).
-
-In the following we are going to thoroughly illustrate all necessary steps to perform an analysis using this repository.
+In the following we are going to thoroughly illustrate all necessary steps to perform an analysis using this part of the pipeline.
 For this reason we will guide the reader through a basic example reproducing each important step, where we also explain the underlying methods
 and their functionality along the way. We also provided a compact [Quick Start](#quick-start) section at the end for anyone who wants to get started right away. The rest of the following content is structured as follows.
 
@@ -271,15 +260,40 @@ An abstract representation of how the algorithm works based on the previous __pe
     -> Summarize all terms and divide by number of terms
     -> (55+10+70) / 3 = 45
 
-When we use our method with the same bin size we also get the same result.
-```
-score = calculate_score(peak_indices, 0, 15)
-print(score)
-```
-```
-45.0
-```
-    
+Now, this value can still be improved. For this purpose we introduced a penalty based on the fragment count of the cell.
+The computation of the score and taking into account the penalty is done in the method **get_score(df, bins = 30, penalty = 200)**.
+Here, the provided dataframe is extended through a new column "Score", where each cell (row) gets its own individual score value. Besides the penalty, this method
+performs one additional step:
+
+1. If the fragment count of the cell is below the penalty (default = 200):
+   - Add the fragment count of the cell subtracted from the penalty to the score. 
+   - [score = score + (penalty - fragment count)]
+2. Multiply the score value with the fraction 1 over the log of the fragment count of the cell. 
+   - [score = score * (1 / log(fragment count))]
+
+The first step increases the score value (decreases the score) further if this fragment count threshold is not met.
+The second step is based on the overall fragment count and generally __rewards__ cells with a high amount of fragments. Let's explore these calculations
+based on example before and a fragment count of 150.
+
+    fragment count: 150
+    penalty: 200
+    score: 45
+
+    score: 45 + (200 - 150) = 95
+    score: 95 * (1 / log(150)) = 43,65625734
+    -> score = 43,65625734
+
+When we increase the fragment count we also get a better score.
+
+    fragment count: 3000
+    penalty: 200
+    score: 45
+
+    score: 45 * (1 / log(3000)) = 12,941740222
+    -> score = 12,941740222
+      
+Hence, we are now able to also include the amount of fragments of a cell into our score, which is a major component in evaluating
+cells from fragment files.
 ### Splitting fragments
 
 ### Outlook
