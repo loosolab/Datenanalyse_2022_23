@@ -307,6 +307,29 @@ def get_score(df, bins = 30, penalty = 200):
     df["Score"] = score_list
     return score_list
 
+def output_h5ad(df, output, optional_var = None):
+    '''
+    This method takes a dataframe and saves it in form of an anndata object in a .h5ad file. 
+    :param df: Dataframe to save as a file.
+    :param output: output path with file name and handle.
+    :param optional_var: optional addition of an external var dimention.
+    '''
+    # drop columns with seriel objects
+    temp = df.drop(columns=['Fragments', 'Distribution','Maxima'])
+    
+    # convert dataframe to anndata object
+    if optional_var is None:
+        adata = ad.AnnData(obs = temp.iloc[:,0:6])
+    else:
+        adata = ad.AnnData(obs = temp.iloc[:,0:6], var = optional_var)
+    
+    # change problematic object types
+    adata.obs['Mean'] = adata.obs['Mean'].astype({'Mean': 'float64'})
+    adata.obs['Median'] = adata.obs['Median'].astype({'Median': 'float64'})
+    
+    # write .h5ad file
+    adata.write_h5ad(output)
+
 
 def get_dataframe_from_BED_file(bed_file):
     
