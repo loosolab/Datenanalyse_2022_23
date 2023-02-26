@@ -23,5 +23,5 @@ To increase the understanding of the whole pipeline we developed a graphical rep
   <img src="images/pipe.png" width="90%">
 </p>
 
-This representation in terms of functionality can be divided into the two packages as follows. The first starts on the left with the reading of the .bed files, followed by two interlocking gears, the quality control functions and parameters and the visualization of these. The result after these two steps is an __AnnData object__, which in turn is further used by the second package.
+This representation in terms of functionality can be divided into the two packages as follows. The first starts on the left with the reading of the .bed files, followed by two interlocking gears, the quality control functions and parameters and the visualization of these. The result after these two steps is an [__AnnData object__](https://anndata.readthedocs.io/en/latest/), which in turn is further used by the second package.
 Here, this object is then additionally filled with information from further .bed and .gtf files. After that, another process of two gears takes place, which is divided into a feature overlap calculation and a visualization step. The result of our pipeline is a rich AnnData object ready for even further analysis. More details are given in the corresponding subfolders.
