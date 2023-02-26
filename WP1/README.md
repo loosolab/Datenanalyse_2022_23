@@ -116,12 +116,12 @@ Both get a dataframe, a column with one value per index and optional an output p
 
     plot.histplt(df, 'Mean', output = '/home/user/')
 <p align="center">
-   <img src="images/Mean_hist.png" />
+   <img src="images/Mean_hist.png" width="45%"/>
 </p>
 
     plot.vioplt(df, 'Mean', output = '/home/user/')
 <p align="center">
-   <img src="images/Mean_vio.png" />
+   <img src="images/Mean_vio.png" width="45%"/>
 </p>
 
 #### Variable Comparison
@@ -132,7 +132,7 @@ In contrast to the previous two functions, it gets two columns and visulises the
 
     plot.compplt(df, 'Mean', 'Median', output = '/home/user/')
 <p align="center">
-   <img src="images/Mean_Median.png" />
+   <img src="images/Mean_Median.png" width="45%"/>
 </p>
 
 #### Distibution by Variable
@@ -144,25 +144,21 @@ Like the previous functions the main arguments are the dataframe and the name of
 
     plot.bindistplt(df, column_name='Mean')
 <p align="center">
-   <img src="images/distribution_Fragments_Mean_99.33_204.0.png" />
+   <img src="images/distribution_Fragments_Mean_99.33_204.0.png" width="45%"/>
 </p>
 The argument "bins" determins the number of bins the data is devided in. For example a bins value of 2 will generate two plots with a different range of the specified variable.
 
     plot.bindistplt(df, column_name='Mean', bins = 2)
 <p align="center">
-   <img src="images/distribution_Fragments_Mean_99.33_107.0.png" />
-</p>
-<p align="center">
-   <img src="images/distribution_Fragments_107.0_204.0.png" />
+   <img src="images/distribution_Fragments_Mean_99.33_107.0.png" width="45.07%"/>
+   <img src="images/distribution_Fragments_Mean_107.0_204.0.png" width="45%"/>
 </p>
 "Mode" changes how the size of the bins is calculated. "equal" means the same number of cells and "linear" means the same range of the variable in one bin.
 
     plot.bindistplt(df, column_name='Mean', bins = 2, mode = 'linear')
 <p align="center">
-   <img src="images/distribution_Fragments_Mean_99.33_163.14.png" />
-</p>
-<p align="center">
-   <img src="images/distribution_Fragments_Mean_163.14_204.0.png" />
+   <img src="images/distribution_Fragments_Mean_99.33_163.14.png" width="44.4%"/>
+   <img src="images/distribution_Fragments_Mean_163.14_204.0.png" width="45%"/>
 </p>
 To use the function with different, but simular formatet data, the argument 'data' can be specified. Furthermore the argument "plot_bins" can be used to define the plot resolution and "show" and  "output_path" control the kind of output that is generated.
 
@@ -174,31 +170,33 @@ On the other hand you can plot the fragment distribution of each cell grouped an
 Like every function in this package, the arguments for the dataframe and the name of a column are essentiell for this function. 
 
     plot.multiplt(df, column_name='Mean')
+
 <p align="center">
-   <img src="images/base_distribution_4_cells_Mean_99.33_204.0.png" />
+   <img src="images/base_distribution_4_cells_Mean_99.33_204.0.png" width="45%"/>
 </p>
+
 The use of "bins", "output_path" and "distribution" (previously "data") is equal to the previous function, but the method of bin size calculation is exclusively "linear" (same variable range in each bin). "mode" determins the scaling of the distribution data. If not defined, the y axis displays the fragment count per cell, "normalize" normalizes the y values with the formula normalized y = y-min(y)/(max(y)-min(y) and "percent" displayes the frequency within each cell.
 
     plot.multiplt(df, column_name='Mean', mode = 'normalized')
+
 <p align="center">
-   <img src="images/normalize_distribution_4_cells_Mean_99.33_204.0.png" />
+   <img src="images/normalize_distribution_4_cells_Mean_99.33_204.0.png" width="45%"/>
 </p>
 
     plot.multiplt(df, column_name='Mean', mode = 'percent')
+
 <p align="center">
-   <img src="images/percent_distribution_4_cells_Mean_99.33_204.0.png" />
+   <img src="images/percent_distribution_4_cells_Mean_99.33_204.0.png" width="45%"/>
 </p>
+
 Furthermore the range that gets binned can be specified by the arguments "upper_limit" and "lower_limit". 
 
     plot.multiplt(df, column_name='Mean', bin = 2, mode = 'percent',
 				    upper_limit = 200, lower_limit = 300)
 <p align="center">
-   <img src="images/percent_distribution_2_cells_Mean_100.0_150.0.png" />
+   <img src="images/percent_distribution_2_cells_Mean_100.0_150.0.png" width="45%"/>
+   <img src="images/percent_distribution_1_cells_Mean_150.0_200.0.png" width="45%"/>
 </p>
-<p align="center">
-   <img src="images/percent_distribution_1_cells_Mean_150.0_200.0.png" />
-</p>
-
 
 #### Calculate a score
 
