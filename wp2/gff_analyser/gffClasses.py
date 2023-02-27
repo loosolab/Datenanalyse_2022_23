@@ -1,5 +1,7 @@
 import os
 import sys
+import pandas as pd
+import numpy as np
 
 def get_complementary_string(sequence: str):
     complementary_string = ''
@@ -17,6 +19,13 @@ def get_complementary_string(sequence: str):
  
 
     return complementary_string
+
+
+def check_for_output_dir(out):
+    try:
+        os.mkdir("{out}/".format(out=out))
+    except:
+        print('out already exist, skipping creation')
 
 
 class GffData:
@@ -139,7 +148,6 @@ class GffData:
 
 
 
-
 class Organism:
     def __init__(self):
 
@@ -148,13 +156,10 @@ class Organism:
         self._printable_fasta = ""
         self._gff_data = []
 
-    def generate_feature_gtf(self, gffdata_list, feature_keys):
-    #feature_list from .count_features
+    def generate_feature_gtf(self, feature_keys: list, out: str):
+ 
 
-        try:
-            os.mkdir('out')
-        except:
-            print('out already exist, skipping creation')
+        check_for_output_dir(out)
 
         feature_count = -1
         feature_list = list(feature_keys.keys())
@@ -163,90 +168,145 @@ class Organism:
             feature_count += 1
 
             print('Generating ' + feature + '-File')
-            for element in gffdata_list:
 
-                if not element.strain.endswith('.gtf'):
-                    element.strain += '.gtf'
+            if not self.strain.endswith('.gtf'):
+                self.strain += '.gtf'
 
+            if self.strain.split('.')[-2].startswith('peak'):
+                filename = f"{out}{self.strain.strip('.gtf')}_{feature_list[feature_count]}.gtf"
+            else:
+                filename = f"{out}{self.strain.strip('.gtf')}.{feature_list[feature_count]}.gtf"
 
-                filename = "out/{strain}.{feature}.gtf".format(strain=element.strain.strip('.gtf'),
-                                                                 feature=feature_list[feature_count])
+            with open(filename, 'a') as gtf_file:
+                for row in self.gff_data:
+                    if row.feature_type == feature_list[feature_count]:
+                        gtf_file.write(row.get_whole_line(start=row.feature_start, end=row.feature_end))
 
-                with open(filename, 'a') as gtf_file:
-                    for row in element.gff_data:
-                        if row.feature_type == feature_list[feature_count]:
-                            gtf_file.write(row.get_whole_line(start=row.feature_start, end=row.feature_end))
-                            
-    def generate_gene_body_gtf(self, gffdata_list):
-        
-        for element in gffdata_list:
-        
-            # Getting the gene_body-GTF
-            bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]),'bedtools')
-            intersect_cmd = "{bed} subtract -a out/{strain}.exon.gtf -b out/{strain}.five_prime_utr.gtf out/{strain}.three_prime_utr.gtf > out/{strain}.exon.gene_bodies.gtf".format(bed=bedtools, strain=element.strain.strip('.gtf'))
-            os.system(intersect_cmd)
-            print("Gene_bodys done")
-                            
-    def generate_promotor_gtf(self, gffdata_list, promotor_distance=2000):
-        try:
-            os.mkdir('out')
-        except:
-            print('out already exist, skipping creation')
-            
+    def generate_gene_body_gtf(self, out: str):
+
+        check_for_output_dir(out)
+        if self.strain.split('.')[-2].startswith('peak'):
+            filename_body = f"{out}{self.strain.strip('.gtf')}_gene_bodies.gtf"
+            infileA = f"{out}{self.strain.strip('.gtf')}_gene.gtf"
+            infileB1 = f"{out}{self.strain.strip('.gtf')}_five_prime_utr.gtf"
+            infileB2 = f"{out}{self.strain.strip('.gtf')}_three_prime_utr.gtf"
+        else:
+            filename_body = f"{out}{self.strain.strip('.gtf')}.gene_bodies.gtf"
+            infileA = f"{out}{self.strain.strip('.gtf')}.gene.gtf"
+            infileB1 = f"{out}{self.strain.strip('.gtf')}.five_prime_utr.gtf"
+            infileB2 = f"{out}{self.strain.strip('.gtf')}.three_prime_utr.gtf"
         
 
-        for element in gffdata_list:
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]), 'bedtools')
+        intersect_cmd = f"{bedtools} subtract -a {infileA} -b {infileB1} {infileB2} > {filename_body}"
+        os.system(intersect_cmd)
+        print("Gene_bodys done")
 
-            feature = 'gene'
-            filename_promotor = "out/{strain}.{feature}.promotor.gtf".format(strain=element.strain.strip('.gtf'),
-                                                            feature=feature)
-            
-            with open(filename_promotor, 'w') as promotor_file:
-                print('Generating Promotor-File')
-                row_counter = 0
-                for row in element.gff_data:
-                    row_counter += 1
-                    if row.feature_type == feature and row.strand == '+' and row.feature_start - promotor_distance > 0:
-                        # for positive strands
-                        promotor_file.write(row.get_whole_line(start=row.feature_start - promotor_distance, end=row.feature_start))
-                        #promotor_file.write('\n')
-                    elif row.feature_type == feature and row.strand == '-':
-                        promotor_file.write(row.get_whole_line(start=row.feature_end, end=row.feature_end + promotor_distance))
-                        #promotor_file.write('\n')
-                        
-        
+    def generate_promoter_gtf(self, promoter_distance: int, out: str):
+        check_for_output_dir(out)
 
-    def generate_tss_gtf(self, gffdata_list, tss_distance=100):
-        
-        try:
-            os.mkdir('out')
-        except:
-            print('out already exist, skipping creation')
-
-
-            
-        
-        
         feature = 'gene'
-        for element in gffdata_list:
-        # Getting the TSS file
-            filename_tss = "out/{strain}.{feature}.TSS{tss_distance}.gtf".format(strain=element.strain.strip('.gtf'),
-                                                                  feature=feature, tss_distance=tss_distance)
+        
+        if self.strain.split('.')[-2].startswith('peak'):
+            filename_promotor = f"{out}{self.strain.strip('.gtf')}_promotor{promoter_distance}.gtf"
+        else:
+            filename_promotor = f"{out}{self.strain.strip('.gtf')}.promotor{promoter_distance}.gtf"
+                                                                                     
+                                                                                                                                                                                                                                                
+        with open(filename_promotor, 'w') as promotor_file:
+            print('Generating Promotor-File')
+            row_counter = 0
+            for row in self.gff_data:
+                row_counter += 1
+                if row.feature_type == feature and row.strand == '+' and row.feature_start - promoter_distance > 0:
+                    # for positive strands
+                    promotor_file.write(
+                        row.get_whole_line(start=row.feature_start - promoter_distance, end=row.feature_start))
+                    # promotor_file.write('\n')
+                elif row.feature_type == feature and row.strand == '-':
+                    promotor_file.write(
+                        row.get_whole_line(start=row.feature_end, end=row.feature_end + promoter_distance))
+                    # promotor_file.write('\n')
 
-         
-            with open(filename_tss, 'w') as tss_file:
-                print('Generating TSS-File')
-                for row in element.gff_data:
-                    if row.feature_type == feature and row.strand == '+':
-                        # for positive strands
-                        tss_file.write(row.get_whole_line(start=row.feature_start, end=row.feature_start + tss_distance))
-                        #tss_file.write('\n')
-                    elif row.feature_type == feature and row.strand == '-':
-                        tss_file.write(row.get_whole_line(start=row.feature_end - tss_distance, end=row.feature_end ))
-                        #tss_file.write('\n')
+    def generate_tss_gtf(self, tss_distance: int, out: str):
 
+        check_for_output_dir(out)
 
-       
+        feature = 'gene'
+        
+        if self.strain.split('.')[-2].startswith('peak'):
+            filename_tss = f"{out}{self.strain.strip('.gtf')}_TSS{tss_distance}.gtf"
+        else:
+            filename_tss = f"{out}{self.strain.strip('.gtf')}.TSS{tss_distance}.gtf"
+                                                                               
+                                                                               
+
+        with open(filename_tss, 'w') as tss_file:
+            print('Generating TSS-File')
+            for row in self.gff_data:
+                if row.feature_type == feature and row.strand == '+':
+                    # for positive strands
+                    tss_file.write(
+                        row.get_whole_line(start=row.feature_start, end=row.feature_start + tss_distance))
+                    # tss_file.write('\n')
+                elif row.feature_type == feature and row.strand == '-':
+                    tss_file.write(row.get_whole_line(start=row.feature_end - tss_distance, end=row.feature_end))
+                    # tss_file.write('\n')
+
+    def generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str):
+
+        check_for_output_dir(out)
+
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]), 'bedtools')
+
+        # Load the bed file into a pandas dataframe
+        bed_df = pd.read_table(fragments, header=None, names=["chrom", "start", "end", "feature", "count", "strand"])
+
+        # Filter the dataframe based on a count threshold
+        filtered_df = bed_df[bed_df["count"] > threshold]
+
+        # Print the filtered dataframe
+        peakfile = f"{fragments}_{self.strain.strip('.gtf')}.peak{threshold}.bed"
+        filtered_df.to_csv(peakfile, sep='\t', index=None)
+
+        
+
+        # Getting the peak-GTF
+        intersect_cmd = f"{bedtools} intersect -a {gtf_file} -b {peakfile} > {out}{self.strain.strip('.gtf')}.peak{threshold}.gtf"
+        os.system(intersect_cmd)
+        print("Peaks done")
+        
+        
+        
+        return f"{out}{self.strain.strip('.gtf')}.peak{threshold}.gtf"
+        
+
+    def generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str):
+        
+        if self.strain.split('.')[-2].startswith('peak'):
+            filename_enhancer = f"{out}{self.strain.strip('.gtf')}_enhancer.gtf"
+        else:
+            filename_enhancer = f"{out}{self.strain.strip('.gtf')}.enhancer.gtf"
+        
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]), 'bedtools')
+        # Getting the enhancer-GTF
+        intersect_cmd = f"{bedtools} intersect -a {gtf_file} -b {enhancer_bed} > {filename_enhancer}"
+        os.system(intersect_cmd)
+        print("Enhancers done")
+
+    def generate_blacklisted_region_gtf(self, gtf_file: str, blacklisted_bed: str, out: str):
+        
+        if self.strain.split('.')[-2].startswith('peak'):
+            filename_blacklisted = f"{out}{self.strain.strip('.gtf')}_blacklisted.gtf"
+        else:
+            filename_blacklisted = f"{out}{self.strain.strip('.gtf')}.blacklisted.gtf"
+            
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]), 'bedtools')
+        # Getting the exclusion_list-GTF
+        intersect_cmd = f"{bedtools} intersect -a {gtf_file}  -b {blacklisted_bed} > {filename_blacklisted}"
+        os.system(intersect_cmd)
+        print("Blacklist done")
+
 
     def count_features(self):
 
@@ -258,8 +318,7 @@ class Organism:
 
         return feature_dict
 
-
-    def set_annotated_dna_seq(self, fasta_extract: bool, filename):
+    def set_annotated_dna_seq(self, fasta_extract: bool, filename: str):
 
         if fasta_extract:
             with open(filename.replace('.gff3', '.fa'), 'w') as fasta_file:
