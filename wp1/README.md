@@ -377,9 +377,12 @@ Nevertheless, we do not claim the accuracy of the above statements. In our opini
 In addition, we plan to be able to compute not only a single score for a cell, but a multiple of scores for different categories, although the determination of these categories is still pending. Thus, the score would have more depth and interpretation possibilities.
 ### Quick Start
 
-HIER WENIG ERKLÄRUNG UND GLEICH MIT CODE LOSLEGEN
+This section is intended for all those who already have experience with this pipeline or want to work with it directly without further explanation. To start directly with an analysis we have set up the subfolder quickstart, which contains some data sets that can be applied directly. An exemplary notebook was created as **Demo.ipynb**. We will discuss the most basic functions within these notebooks in the following.
 
-AUCH AUF TESTDATENSATZ EINGEHEN
+Basically, our part of the pipeline can be executed with only a single function **load_data(path)**. Here the file is read in, as well as all QC parameters are calculated. Afterwards the resulting object can be used by further functions for visualization or can be stored as AnnData object to enable further processing of e.g. the second part of the pipeline (WP2).
+
+Let's assume that we want to read the file test.bed from the folder quickstart.
+
 
 ### References
 
