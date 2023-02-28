@@ -22,7 +22,7 @@ def bindistplt(df, data='Fragments', column_name='Mean', bins=1, mode='equal', p
         grouped_data.append([])
     bin_index = 0
     # sort dataframe by variable and define max and min of the variable sorted by
-    sorted_df = df.sort_values(by=[column_name])
+    sorted_df = df.loc[df[column_name] != float("inf")].sort_values(by=[column_name])
     min_variable = sorted_df[column_name][0]
     max_variable = sorted_df[column_name][-1]
 
