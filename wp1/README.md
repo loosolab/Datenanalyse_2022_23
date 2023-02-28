@@ -50,10 +50,10 @@ and completely omit the remaining ones. This is further explained in the subsequ
 In the previous chapter we described the data files which function as input for our pipeline. Now, the first step is
 to read these files. For this purpose we will use the method **read_fragment_file(abs_path: str)**. This method reads a fragment file (.bed) at the
 absolute path location provided via parameter and returns a dictionary having the _cellbarcodes_ (column 1) as keys and the computed
-_fragment lengths_ (column 2, column 3) as the corresponding values. Now, we can use this method with our file _stomach_frag_head_30.bed_, which simply contains
-the first 30 lines of [stomach_SM-JF1O3_rep1_fragments.bed](http://yed.ucsd.edu:8787/fragment/).
+_fragment lengths_ (column 2, column 3) as the corresponding values. Now, we can use this method with our file [_test.bed_](https://github.com/loosolab/Datenanalyse_2022_23/blob/main/wp1/quickstart/test.bed), which simply contains
+the first 30 lines of [stomach_SM-JF1O3_rep1_fragments.bed](http://yed.ucsd.edu:8787/fragment/) to keep everything short.
     
-    frag_dictionary = read_fragment_file("~/stomach_frag_head_30.bed")
+    frag_dictionary = read_fragment_file("~/test.bed")
 
 Formatted printing of the _frag_dictionary_ yields the following output:
 
@@ -377,12 +377,42 @@ Nevertheless, we do not claim the accuracy of the above statements. In our opini
 In addition, we plan to be able to compute not only a single score for a cell, but a multiple of scores for different categories, although the determination of these categories is still pending. Thus, the score would have more depth and interpretation possibilities.
 ### Quick Start
 
-This section is intended for all those who already have experience with this pipeline or want to work with it directly without further explanation. To start directly with an analysis we have set up the subfolder quickstart, which contains some data sets that can be applied directly. An exemplary notebook was created as **Demo.ipynb**. We will discuss the most basic functions within these notebooks in the following.
+This section is intended for all those who already have experience with this pipeline or want to work with it directly without further explanation. To start directly with an analysis we have set up the subfolder quickstart, which contains some data sets that can be applied directly. An exemplary notebook with all methods mentioned in this chapter and the resulting plots was created as **Demo.ipynb**. We will discuss the most basic functions within these notebooks in the following.
 
-Basically, our part of the pipeline can be executed with only a single function **load_data(path)**. Here the file is read in, as well as all QC parameters are calculated. Afterwards the resulting object can be used by further functions for visualization or can be stored as AnnData object to enable further processing of e.g. the second part of the pipeline (WP2).
+Basically, our part of the pipeline can be executed with only a single function **load_data(path: str, bins = 30, penalty = 200)**. Here the file is read in, as well as all QC parameters are calculated. Afterwards the resulting object can be used by further functions for visualization or can be stored as AnnData object to enable further processing of e.g. the second part of the pipeline (WP2).
 
-Let's assume that we want to read the file test.bed from the folder quickstart.
+Let's assume that we want to read the file [test.bed](https://github.com/loosolab/Datenanalyse_2022_23/blob/main/wp1/quickstart/test.bed) from the folder quickstart.
 
+    path = './quickstart/test.bed'
+    df = utils.load_data(path) 
+
+Now this dataframe is equipped with everything necessary for plotting varied aspects of the data.
+
+Plot the distributions of the Mean as histogram:
+```
+plot.histplt(df, column_name = 'Mean')
+```
+Plot the distribution of the Mean as a violin plot:
+```
+plot.vioplt(df, column_name = 'Mean')
+```
+Compare the distribution of different qc parameters in a scatterplot:
+```
+plot.compplt(df, column_name_1 = 'Score', column_name_2 = 'Mean')
+```
+Bin cells by different qc parameters and plot fragment length distributions of these slices:
+```
+plot.bindistplt(df, column_name = 'Mean', bins = 2, mode = 'equal')
+```
+Take a closer look at those slices by plotting the fragment length distribution of single cells:
+```
+plot.multiplt(df, column_name = 'Mean', bins = 2, lower_limit = 0, upper_limit = 200, mode = 'base')
+```
+Now, we can save this dataframe object as an AnnData object for further usages.
+```
+output_path = './quickstart/test_filtered.h5ad'
+utils.output_h5ad(df_mean100, output = output_path)
+```
 
 ### References
 
