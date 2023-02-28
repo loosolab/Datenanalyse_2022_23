@@ -92,7 +92,7 @@ The _gffBuilder.py_ contains a parser for the [GFF](https://www.ensembl.org/info
 which stores the file information into an object and a wrapper function to generate all possible feature files. The parser is used as follows:
 
 ```py  
-    object_list = build_gff3_class(file: list)
+object_list = build_gff3_class(file: list)
 ```
 
 The input needed for this function:
@@ -107,7 +107,7 @@ feature is generated.</br>
 The wrapper function for generating all feature files is called by:
 
 ```py  
-    generate_feature_files(adata: anndata, gtf_file: list, fragments: str, enhancer_bed: str, blacklisted_bed: str, promoter_distance: int, tss_distance: int, out: str)
+generate_feature_files(adata: anndata, gtf_file: list, fragments: str, enhancer_bed: str, blacklisted_bed: str, promoter_distance: int, tss_distance: int, out: str)
 ```
 
 The input needed for this wrapper function is:
@@ -138,9 +138,9 @@ these objects, we can use the method `self.generate_feature_gtf(feature_keys: li
 Below an example for generating all possible feature files is shown:
 
 ```py  
-    for element in organism_list:
-        features = element.count_features()        
-        element.generate_feature_gtf(feature_keys=features)
+for element in organism_list:
+    features = element.count_features()        
+    element.generate_feature_gtf(feature_keys=features)
 ```
         
 The method `features = element.count_features()` returns a list of all existing features inside the
@@ -184,7 +184,7 @@ To generate a [GFF](https://www.ensembl.org/info/website/upload/gff.html) file c
 we can call the method: 
 
 ```py              
-    self.generate_promoter_gtf(promoter_distance: int, out: str)
+self.generate_promoter_gtf(promoter_distance: int, out: str)
 ```
 
 
@@ -199,7 +199,7 @@ To get the TSS start and stop Position, we also need to know where a gene is loc
 can add a stated length to the start to get the end position of the TSS.</br> The method for generating a TSS feature file is:
 
 ```py  
-    self.generate_tss_gtf(tss_distance: int, out: str)
+self.generate_tss_gtf(tss_distance: int, out: str)
 ```
 
 The input needed for this method is:
@@ -216,7 +216,7 @@ and placed inside the output directory for this method to work.</br>
 The method for generating a Gene Body feature file is:
 
 ```py  
-    self.generate_gene_body_gtf(out: str)
+self.generate_gene_body_gtf(out: str)
 ```
 
 The input needed for this method is:
@@ -234,7 +234,7 @@ about peaks for the given tissues.
 </br> The wrapper method for this is:
 
 ```py  
-    self.generate_peak_gtf(adata: anndata , gtf_file: str, out: str)
+self.generate_peak_gtf(adata: anndata , gtf_file: str, out: str)
 ```
 
 The input needed for this wrapper method is:
@@ -250,11 +250,11 @@ and use the counter to index the [GFF](https://www.ensembl.org/info/website/uplo
 inside a list.</br>
 An example is shown here:</br>
 ```py  
-    object_list = build_gff3_class(file=gtf_file)
+object_list = build_gff3_class(file=gtf_file)
 
-    for i, element in enumerate(object_list):
-        features = element.count_features()
-        element.generate_peak_gtf(adata=adata, gtf_file=gtf_file[i], out=out)
+for i, element in enumerate(object_list):
+    features = element.count_features()
+    element.generate_peak_gtf(adata=adata, gtf_file=gtf_file[i], out=out)
 ```
 
 
@@ -265,7 +265,7 @@ we can intersect the fragment file and the _blacklisted\_region.bed_ with bedtoo
 </br>The wrapper method for this is:
 
 ```py  
-    self.generate_blacklisted_region_gtf(gtf_file: str, blacklisted_bed: str, out: str)
+self.generate_blacklisted_region_gtf(gtf_file: str, blacklisted_bed: str, out: str)
 ```
 
 The input needed for this wrapper method is:
@@ -285,7 +285,7 @@ we can intersect the fragment file and the _enhancer.bed_ with bedtools.
 </br>The wrapper method for this is:
 
 ```py  
-    self.generate_enhancer_gtf(gtf_file: str, enhancer_bed: str, out: str)
+self.generate_enhancer_gtf(gtf_file: str, enhancer_bed: str, out: str)
 ```
 
 The input needed for this wrapper method is:
@@ -309,7 +309,7 @@ through the total number of reads for every cell barcode.
 </br>This is the wrapper function for calculating feature overlaps for all feature files in a given input directory.
 
 ```py  
-    pct_fragments_in_features(adata: anndata, input_dir: str, fragments_file: str)
+pct_fragments_in_features(adata: anndata, input_dir: str, fragments_file: str)
 ```
 
 The input needed for this wrapper function is:
@@ -321,7 +321,7 @@ The input needed for this wrapper function is:
 It is also possible to calculate the feature overlap for only one given feature with this function.
 
 ```py  
-    pct_fragments_in_feature(adata: anndata, feature: str, fragments_file: str)
+pct_fragments_in_feature(adata: anndata, feature: str, fragments_file: str)
 ```
 
 
@@ -348,34 +348,74 @@ These functions are combined into the `presentation.py` script, to avoid unneces
 
 #### Different Presentation Styles
 
-- Violinplots
-  - display density accross celltypes and featurerate
-- Correlation Plots
-  - scatterplots that compare two metrics
-  - can visualize linear or a parabolical correlation
-- Dimension Reduction Maps (umaps)
+The violin plots are helpful to quickly assess if there are plenty of cells in a dataset, furthermore it displays the mean and their dispersion. This can be used to compare the overall spread of featurerate per cell. One function that we implemented `compare_feature_to_celltypes` compares, as the name suggests, one feature against all celltypes, this will result with a plot like this [TODO]. If you found celltypes that have virtue, you can compare them in greater detail by firstly calling `compare_feature_to_celltype` taking nearly the same parameters but limiting the output violins to the base values of all cells and the specific celltype.
+To reduce unnecessary clutter the celltypes are grouped and binned, this happens in `get_groups_with_size`.
+The final function to display data is the `Dimensionreduction`, as the name implies it tries to reduce the dimension of the presented data. The algorithm we are using is called `umap` combined with `leiden` 
+
+<!-- 
+TODO:
+    - compare_feature_to_celltypes
+      - plot
+      - parameter description
+    - compare_feature_to_celltype
+      - plot
+      - parameter description
+      - description how groups are made
+    - Dimensionreductio
+      - factcheck
+    - Groups
+      - 
+ -->
+
 
 ### Functions
 
 #### Dimension Reduction
 ```py
-compareDimesionreductions(adata, key: str or list, comparator: str or list)
+def compare_dimesionreductions(adata, key: str or list, comparator: str or list)
 ```
+<!-- update function signature -->
 
-This function displays the `Dimension Reductions` defined in key and lastly add the `Comperator` or `Comperators` to compare the prior maps to. The comparator will be visible in each row while the dimension reductions labelled by `key` will be one per row.
+Parameter|Type|Description
+---:|---|:---
+adata | AnnData | The AnnData that is to be examined
+key | String or List of Strings | The key or keys (features) that are displayed
+comparator | String or List of Strings | The key or keys (Cell Type) that are used to compare the keys to
+out | String (optional) | The location that the figures are saved to
 
 #### Feature Comparison in Violinplots
 
 ```py
-def compareFeatureToCelltypes(adata, feature: list or str, comparator: str, save=None):
+def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, out=None, sharey=True):
+def render_feature_to_celltype(adata, feature, celltype, name, out=None, sharey=True):
 ```
 
-The concept is similar to the previous mentioned function, but it focuses on `violin plots`. It expects either a single or a list of strings that represent a feature and a comparator that is used to group these together, in practice we used the predicted celltypes.
+
+Parameter|Type|Description
+:---:|:---:|:---
+adata | AnnData | The AnnData that is to be examined
+key | String or List of Strings | The key or keys (features) that are displayed
+comparator | String or List of Strings | The key or keys (Cell Type) that are used to compare the keys to
+save | String (optional) | The location that the figures are saved to
+groups | List of Strings (optional) | a list of values out of `comparator` that are worth extra attention
 
 
+#### Utility Functions
 
+```py
+def get_sorted_groups_with_size(adata, feature: str, max_size: int, key: str = 'cell type', groups=None):
+```
+
+Parameter|Type|Description
+:---:|:---:|:---
+adata | AnnData | The AnnData object that is to be examined
+feature | String | The feature to sort after
+max_size | Integer | The maximal size that a group should have
+key | String | The column in the AnnData that should be used as a grouping, defaults to 'cell type'.
+groups | List of String (optional) | A limited list out of key that is used for grouping instead.
 
 ### Quick Start
+
 
 
 ### References
