@@ -411,7 +411,7 @@ plot.multiplt(df, column_name = 'Mean', bins = 2, lower_limit = 0, upper_limit =
 Now, we can save this dataframe object as an AnnData object for further usages.
 ```
 output_path = './quickstart/test_filtered.h5ad'
-utils.output_h5ad(df_mean100, output = output_path)
+utils.output_h5ad(df, output = output_path)
 ```
 
 ### References
