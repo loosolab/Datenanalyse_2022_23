@@ -191,63 +191,88 @@ def multiplt(df, column_name='Fragment-Count', distribution='Distribution', bins
     return
 
 
-def splitandprofileplt(df, tss_positions, half_window_width, split_point_1=None, split_point_2=None):
+def split_and_multiplot_profile(df, tss_positions, half_window_width, split_point_1 = None, split_point_2 = None):
     """
-    This splits dataframe into different categories on the basis of fragment lengths 
-    and then plots the profiles over TSS for these categories.
-    :param df: dataframe of the bed file.
-    :param tss_positions: a set of tss positions (see HTSeq.GFF_Reader, utils.get_TSS_set_from_GTF_file).
-    :param split_point_1: fragment length value at which the split into two categories takes place.
-    :param split_point_2: fragment length value at which the split into the third category takes place.
+    This function splits fragment into categories based on the
+    fragment lengths and then plots their profile around TSS.
+    
+    :param df: dataframe containing chrom, start and end as columns.
+    :param tss_positions: a set of TSS positions.
+    :split_point_1: an integer value or an array of values, 
+        used to determine the splitting point (length) of small and long fragments.
+    :split_point_2: an integer value or an array of values, 
+        used to determine the splitting point (length) of long and very long fragments.
     """
     
-    #No splitting of fragments
     if split_point_1 == None:
-        genomic_array = utils.get_genomic_array_from_BED_dataframe(df)
-        profile = utils.get_profile_for_plots(genomic_array, tss_positions, half_window_width)
-        label = "All fragment lenghts"
-        profiles = [profile]
-        labels = [label]
+        if split_point_2 == None:
+            genomic_array = utils.get_genomic_array_from_bed_dataframe(df)
+            profile  = utils.get_profile_array_for_plots([genomic_array], tss_positions, half_window_width)[0]
+            label = "All fragment Lengths"
+            profplt([profile], [label], half_window_width)
+            return
+        else: 
+            print('FAILED: Split point 2 cannot be passed without a value for split point 1.')
+            return
         
-    #Splitting at a single point.
-    elif split_point_2 == None:
-        short_fragments_df = df.loc[df['End']-df['Start'] <= split_point_1]
-        long_fragments_df = df.loc[df['End']-df['Start'] > split_point_1]
-    
-        genomic_array_1 = utils.get_genomic_array_from_BED_dataframe(short_fragments_df)
-        genomic_array_2 = utils.get_genomic_array_from_BED_dataframe(long_fragments_df)
-    
-        profile_1 = utils.get_profile_for_plots(genomic_array_1, tss_positions, half_window_width)
-        profile_2 = utils.get_profile_for_plots(genomic_array_2, tss_positions, half_window_width)
-    
-        label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
-        label_2 = "Long fragments : > "+ str(split_point_1) +"bp"
+    elif type(split_point_1) == int:
+        if split_point_2 == None:
+            array_of_genomic_arrays = utils.split_df_and_get_genomic_arrays(df, [split_point_1])
+            [profile_1, profile_2] = utils.get_profile_array_for_plots(array_of_genomic_arrays, tss_positions, half_window_width)
+            label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
+            label_2 = "Long fragments : > "+ str(split_point_1) +"bp"
+            profplt([profile_1, profile_2], [label_1, label_2], half_window_width)
+            return
+            
+        elif type(split_point_2) == int:
+            array_of_genomic_arrays = utils.split_df_and_get_genomic_arrays(df, [split_point_1, split_point_2])
+            [profile_1, profile_2, profile_3] = utils.get_profile_array_for_plots(array_of_genomic_arrays, tss_positions, half_window_width)
+            label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
+            label_2 = "Long fragments : "+ str(split_point_1) +" - "+ str(split_point_2) +"bp"
+            label_3 = "Very long fragments : > "+ str(split_point_2) +"bp"
+            profplt([profile_1, profile_2, profile_3], [label_1, label_2, label_3], half_window_width)
+            return
         
-        profiles = [profile_1, profile_2]
-        labels = [label_1, label_2]
+        elif type(split_point_2) == list:
+            
+            genomic_array_1 = utils.get_genomic_array_from_bed_dataframe(df.loc[df['End']-df['Start'] <= split_point_1])
+            array_of_genomic_arrays = utils.split_df_and_get_genomic_arrays(df.loc[df['End']-df['Start'] > split_point_1], split_point_2)
+            
+            profile_1  = utils.get_profile_array_for_plots([genomic_array_1], tss_positions, half_window_width)[0]
+            label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
+            
+            profile_array = utils.get_profile_array_for_plots(array_of_genomic_arrays, tss_positions, half_window_width)
+            for index, split_point in enumerate(split_point_2):
+                label_2 = "Long fragments : "+ str(split_point_1) +" - "+ str(split_point) +"bp"
+                label_3 = "Very long fragments : > "+ str(split_point) +"bp"
+                profile_2 = np.zeros(2*half_window_width, dtype='i')
+                profile_3 = np.zeros(2*half_window_width, dtype='i')
+                for profile in profile_array[0:index+1]:
+                    profile_2 += profile
+                for profile in profile_array[index+1:]:
+                    profile_3 += profile
+                profplt([profile_1, profile_2, profile_3], [label_1, label_2, label_3], half_window_width)
+            return
     
-    #Splitting at two points.
-    else:
-        short_fragments_df = df.loc[df['End']-df['Start'] <= split_point_1]
-        long_fragments_df = df.loc[(df['End']-df['Start'] > split_point_1) & (df['End']-df['Start'] <= split_point_2)]
-        verylong_fragments_df = df.loc[df['End']-df['Start'] > split_point_2]
-    
-        genomic_array_1 = utils.get_genomic_array_from_BED_dataframe(short_fragments_df)
-        genomic_array_2 = utils.get_genomic_array_from_BED_dataframe(long_fragments_df)
-        genomic_array_3 = utils.get_genomic_array_from_BED_dataframe(verylong_fragments_df)
-    
-        profile_1 = utils.get_profile_for_plots(genomic_array_1, tss_positions, half_window_width)
-        profile_2 = utils.get_profile_for_plots(genomic_array_2, tss_positions, half_window_width)
-        profile_3 = utils.get_profile_for_plots(genomic_array_3, tss_positions, half_window_width)
-    
-        label_1 = "Short fragments : <= "+ str(split_point_1) +"bp"
-        label_2 = "Long fragments : "+ str(split_point_1) +" - "+ str(split_point_2) +"bp"
-        label_3 = "Very long fragments : > "+ str(split_point_2) +"bp"
+    elif type(split_point_1) == list:
+        if split_point_2 == None:
+            array_of_genomic_arrays = utils.split_df_and_get_genomic_arrays(df, split_point_1)
+            profile_array = utils.get_profile_array_for_plots(array_of_genomic_arrays, tss_positions, half_window_width)
+            for index, split_point in enumerate(split_point_1):
+                label_1 = "Short fragments : <= "+ str(split_point) +"bp"
+                label_2 = "Long fragments : > "+ str(split_point) +"bp"
+                profile_1 = np.zeros(2*half_window_width, dtype='i')
+                profile_2 = np.zeros(2*half_window_width, dtype='i')
+                for profile in profile_array[0:index+1]:
+                    profile_1 += profile
+                for profile in profile_array[index+1:]:
+                    profile_2 += profile
+                profplt([profile_1, profile_2], [label_1, label_2], half_window_width)
+            return
         
-        profiles = [profile_1, profile_2, profile_3]
-        labels = [label_1, label_2, label_3]
-    
-    profplt(profiles, labels, half_window_width)
+        else: 
+            print('FAILED: Split point 2 cannot be passed when an array is passed for split point 1.')
+            return
     return
 
 
@@ -304,30 +329,40 @@ def vioplt(df, column_name, output=None):
     return
 
 
-def profplt(profile_array, label_array, half_window_width, output = None):
-    # Plots profile plots for one or more profiles.
-    # the output parameter is the path for saving the plot.
+def profplt(profile_array, label_array, half_window_width, name = None, output = None):
+    """
+    Plots multiple profiles from the array over a single plot.
+    
+    :param profile_array: array of profiles to plot.
+    :param label_array: array of labels corresonding to profiles.
+    :param half_window_width: half-size of the window used to create profile.
+    :param name: name of the plot.
+    :param output: path for the output file. 
+    """
     
     fig, ax = plt.subplots()             
     x = np.arange(-half_window_width, half_window_width) 
     
     #Plots for individual profiles
     for index, profile in enumerate(profile_array):
-        if index == 0:
-            ax.plot(x, profile, label = label_array[index])
-        else:
-            ax.plot(x, profile, label = label_array[index],  linestyle = '--')
-    
+        ax.plot(x, profile, label = label_array[index])
+        
     #Set Labels
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, loc = 'upper right')
+    fig.legend(handles, labels, loc = 'upper right')
+    plt.xlabel('Distance from TSS')
+    plt.ylabel('Fragment Count')  
     
     #Set Grid
-    plt.grid(which='major', color='#DDDDDD', linewidth=0.8)
-    plt.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+    plt.grid(which='major', axis = 'x',color='#DDDDDD', linewidth=0.8)
+    plt.grid(which='minor', axis = 'x', color='#EEEEEE', linestyle=':', linewidth=0.5)
     plt.minorticks_on()
     
-    #Save plot
+    #Set Name
+    if name != None:
+        ax.set_title(name)
+    
+    #Save Plot
     if output != None:
         plt.savefig(f'{output}_TSS_profile.png', bbox_inches='tight')
         
