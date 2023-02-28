@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import gff_analyser.gffClasses as gff
 
+
 def strain_exists(name: str, data: list):
     return next((True for organism in data if organism.strain == name), False)
 
@@ -10,8 +11,20 @@ def strain_exists(name: str, data: list):
 def find_strain(name: str, data: list):
     return next((organism for organism in data if organism.strain == name), None)
 
+def sort_bed(frag_file, OUTPUT_PATH):
+    
+    gff.check_for_output_dir(out=OUTPUT_PATH)
+    
+    
+    copy_cmd = f"cp {frag_file} {OUTPUT_PATH}"
+    filename_raw = frag_file.split('/')[-1]
+    gzip_cmd = f"gzip -d {OUTPUT_PATH}{filename_raw}"
+    sort_cmd = f"sort -k1,1 -k2,2n {OUTPUT_PATH}{filename_raw.strip('.gz')} > {OUTPUT_PATH}{filename_raw.strip('.gz')}_sorted.bed"
+    os.system(copy_cmd)
+    os.system(gzip_cmd)
+    os.system(sort_cmd)
+    return f"{OUTPUT_PATH}{filename_raw.strip('.gz')}_sorted.bed"
 
-        
 
 def add_sequence(data: list, dna_seq: str, fasta_counter: int, printable_seq: str):
 
@@ -91,35 +104,18 @@ def build_gff3_class(file: list):
         
     return organism_class_objects
 
-def generate_feature_files(gtf_file, fragments, enhancer_bed, blacklisted_bed, threshold, promoter_distance, tss_distance, out):
+def generate_feature_files(adata, gtf_file, fragments, enhancer_bed, blacklisted_bed, threshold, promoter_distance, tss_distance, out):
     
     object_list = build_gff3_class(file=gtf_file)
-    
-    
+
     for i, element in enumerate(object_list):
         features = element.count_features()
-        
-        
-        peak_gtf = element.generate_peak_gtf(fragments=fragments, threshold=threshold, gtf_file=gtf_file[i], out=out)
-        peak_object_list = build_gff3_class(file=[peak_gtf])
-        
-        
-        # Calculating feature's only for peak filtered lines
-        for ele in peak_object_list:
-            ele.generate_feature_gtf(feature_keys=features, out=out)
-            ele.generate_promoter_gtf(promoter_distance=promoter_distance, out=out)
-            ele.generate_tss_gtf(tss_distance=tss_distance, out=out)
-            ele.generate_gene_body_gtf(out=out)
-            ele.generate_enhancer_gtf(gtf_file=peak_gtf, enhancer_bed=enhancer_bed, out=out)
-            ele.generate_blacklisted_region_gtf(gtf_file=peak_gtf, blacklisted_bed=blacklisted_bed, out=out)        
-        
+        element.generate_peak_gtf(adata=adata, gtf_file=gtf_file[i], out=out)    
         element.generate_feature_gtf(feature_keys=features, out=out)        
         element.generate_promoter_gtf(promoter_distance=promoter_distance, out=out)
         element.generate_tss_gtf(tss_distance=tss_distance, out=out)
         element.generate_gene_body_gtf(out=out)        
         element.generate_enhancer_gtf(gtf_file=gtf_file[i], enhancer_bed=enhancer_bed, out=out)
         element.generate_blacklisted_region_gtf(gtf_file=gtf_file[i], blacklisted_bed=blacklisted_bed, out=out)
-        
-
 
     
