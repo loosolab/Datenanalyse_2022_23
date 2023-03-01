@@ -168,27 +168,8 @@ def compare_dimensionreductions(adata, key: str or list, comparator: str or list
         plt.savefig(f'{out}umaps/{filename}.png')
     plt.close()
 
-def compare_feature_to_celltype(adata, feature, celltype, name, sharey=True, out=None):
-    if type(feature) is list:
-        features = feature
-        for feature in features:
-            print(f'{feature}:')
-            render_feature_to_celltype(adata, feature, celltype, name, out, sharey)
-    else:
-        render_feature_to_celltype(adata, feature, celltype, name, out, sharey)
 
-def render_feature_to_celltype(adata, feature, celltype, name, out=None, sharey=True):
-    adata_tmp = adata.copy()
-    adata_tmp = adata_tmp[adata_tmp.obs['cell type'] == celltype]
-    fig, axs = plt.subplots(nrows=1, ncols=2, gridspec_kw={'wspace':0.4, 'hspace':0.5}, figsize=(10,5), sharey=sharey)
-    sc.pl.violin(adata, feature, ax = axs[0], ylabel=name, show=False)
-    sc.pl.violin(adata_tmp, feature, ax = axs[1], ylabel=name, show=False)
-    if out:
-        create_output_directory(out)
-        create_output_directory(out+'violins/')
-        fig.savefig(f"{out}violins/{feature}_{celltype}_violin.png")
-
-def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, groups: list = None, name=None, out=None, sharey=True):
+def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, max_size, groups: list = None, name=None, out=None, sharey=True, rotation=0):
     """
     Wrapper function for `render_compare_feature_to_celltypes. Draws a violin plot for each element in feature and one violin plot per feature that is grouped by the comparator
 
@@ -202,23 +183,23 @@ def compare_feature_to_celltypes(adata, feature: list or str, comparator: str, m
         features = feature
         for feature in features:
             print(f'{feature}:')
-            render_compare_feature_to_celltypes(adata=adata, feature=feature, groups=groups, comparator=comparator, name=name, max_size=max_size, out=out, sharey=sharey)
+            render_compare_feature_to_celltypes(adata=adata, feature=feature, groups=groups, comparator=comparator, name=name, max_size=max_size, out=out, sharey=sharey, rotation=rotation)
     else:
-        render_compare_feature_to_celltypes(adata=adata, feature=feature, groups=groups, comparator=comparator, name=name, max_size=max_size, out=out, sharey=sharey)
+        render_compare_feature_to_celltypes(adata=adata, feature=feature, groups=groups, comparator=comparator, name=name, max_size=max_size, out=out, sharey=sharey, rotation=rotation)
 
-def render_compare_feature_to_celltypes(adata, feature, groups, comparator = 'cell type', name=None, max_size=5, out=None, sharey=True):
+def render_compare_feature_to_celltypes(adata, feature, groups, comparator = 'cell type', name=None, max_size=5, out=None, sharey=True, rotation=0):
     """Make a violinplot of feature and feature grouped by comparator and optionally save to out"""
     label = 'Percent' if feature.startswith('pct') else 'Count'
     adata = filter_by_cell_count(adata, 5, comparator)
 
     groups = get_sorted_groups_with_size(adata=adata, feature=feature, max_size=max_size, key=comparator, groups=groups)
-    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4, 'hspace':0.5}, figsize=(40,20), sharey=sharey)
+    fig, axs = plt.subplots(nrows=1, ncols=len(groups)+1, gridspec_kw={'wspace':0.4, 'hspace':0.5}, figsize=(len(groups)*10,20), sharey=sharey)
 
     sc.pl.violin(adata, feature, ax = axs[0], show=False, ylabel=label)
     for index, group in groups.items():
         adata_tmp = adata.copy()
         adata_tmp = adata_tmp[adata_tmp.obs[comparator].isin(group)]
-        sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axs[index+1], rotation=90, show=False, ylabel=name)
+        sc.pl.violin(adata_tmp, feature, groupby=comparator, ax = axs[index+1], rotation=rotation, show=False, ylabel=name)
     if out:
         create_output_directory(out+'violins/')
         fig.savefig(f"{out}violins/{feature}_{comparator}_violin.png")
