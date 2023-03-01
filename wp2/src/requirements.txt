@@ -1,0 +1,8 @@
+seaborn==0.10.1
+numpy
+scanpy
+episcanpy
+scipy
+matplotlib
+pybedtools
+sctoolbox
