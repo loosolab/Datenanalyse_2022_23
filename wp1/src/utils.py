@@ -379,9 +379,9 @@ def split_df_and_get_genomic_arrays(df, array_of_splitting_values):
     :param array_of_splitting_values: array of values that are used to determine the intervals for splitting.
     """
     array_of_genomic_arrays = []
-    for index, split_point in enumerate(array_of_split_points):
+    for index, split_point in enumerate(array_of_splitting_values):
         array_of_genomic_arrays.append(get_genomic_array_from_bed_dataframe(df.loc[df['End']-df['Start'] <= split_point]))
-        if index != (len(array_of_split_points) -1):
+        if index != (len(array_of_splitting_values) -1):
             df = df.loc[df['End']-df['Start'] > split_point]
         else:
             array_of_genomic_arrays.append(get_genomic_array_from_bed_dataframe(df.loc[df['End']-df['Start'] > split_point]))
