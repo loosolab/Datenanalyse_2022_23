@@ -304,7 +304,8 @@ For the calculation of the feature overlap, a function developed by an organisat
 from the [Max Planck Institute for Heart and Lung Research](https://www.mpg.de/149809/heart-lung-research).
  This function calculates the total number of reads per cell barcode and the number of reads
 coming from a given feature, from which we can get the feature overlap rate by dividing the number of reads per feature 
-through the total number of reads for every cell barcode.
+through the total number of reads for every cell barcode. To use this function you need the [calc_overlap_pct.py](/src/calc_overlap_pct.py)
+, from the sctoolbox, prepared inside the [src](/src)-Folder in this repository.
 </br>This is the wrapper function for calculating feature overlaps for all feature files in a given input directory.
 
 ```py  
