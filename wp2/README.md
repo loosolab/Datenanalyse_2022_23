@@ -455,6 +455,3 @@ To generate the required GTF files you can run the function `generate_feature_fi
 
     Noah Leon Stürtz
          noah.leon.stuertz@bioinfsys.uni-giessen.de
----
-
-### Appendix
