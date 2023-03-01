@@ -300,54 +300,64 @@ cells from fragment files.
 
 To look at the fragment distribution around a TSS, we plot the fragments from the BED file in a window of 2000bp around the TSS that were extracted from the GTF file. To do so we use the: 
 
-    plot.splitandprofileplt(df, tss_positions, half_window_width =1000) 
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000) 
 
 <p align="center">
-   <img src="images/profile_plot.png" width="45%"/>
+   <img src="images/stomach_all.png" width="45%"/>
 </p>
 
 When you look at the fragment distribution around TSS per tissue sample, you can notices a big peak just towards the left of the TSS. However, the plot itself doesn't give any information about the nucleosome distribution or chromatin accessibility at the TSS. 
 
 ### Splitting fragments
 
-To get an idea of the nucleosome distribution, we first need to filter the fragments that may contain a nucleosome. Filtering by fragment lengths is a reasonable approach because the typical size of a nucleosome is approximately 150bp. Therefore, we can first categorize fragments with fragment length > 160bp as fragments with nucleosomes (or long fragments). 
+To get an idea of the nucleosome distribution, we first need to filter the fragments that may contain a nucleosome. Filtering by fragment lengths is a reasonable approach because the typical size of a nucleosome is approximately 150bp. Therefore, we can first categorize fragments with fragment length > 150bp as fragments with nucleosomes (or long fragments). 
 
-To these splitting of fragments, the function **plot.splitandprofileplt** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
+To these splitting of fragments, the function **plot.split_and_multiplot_profile** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
 For e.g: we can use
 
-    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160) 
+    plot.split_and_multiplot_profile( df, tss_positions, half_window_width =1000, split_point_1 = 150) 
 
 to generate the following plot:
 
 <p align="center">
-   <img src="images/2_categories_160.png" width="45%"/>
+   <img src="images/stomach_150.png" width="45%"/>
 </p>
 
-It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. 
+It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. That is a lot of information, but here we have just intuitively selected 150bp as our splitting point which gives rise to questions such as: 
+Have we selected the right value? 
+Is there even a right value? 
+How does the plot look like for other values?
 
-Here are the plots when we try to split fragments for different fragment lengths: 
+To answer these questions, we can use the multi-plotting capability of our function. If you pass an array of values to the parameter split_point_1, instead of a single value, the function splits and plots multiple plots corresponding to the values in the array. 
+For instance, the function 
+    
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000, split_point_1 = [110,130,150,170,190,210])
+
+generates the following plots:  
+
 <p align="center">
-   <img src="images/2_categories_40.png" width="50%"/><img src="images/2_categories_80.png" width="50%"/>
+   <img src="images/stomach_110.png" width="33%"/><img src="images/stomach_130.png" width="33%"/><img src="images/stomach_150.png" width="33%"/>
 </p>
 <p align="center">
-    <img src="images/2_categories_120.png" width="50%"/><img src="images/2_categories_160.png" width="50%"/>
+    <img src="images/stomach_170.png" width="33%"/><img src="images/stomach_190.png" width="33%"/><img src="images/stomach_210.png" width="33%"/>
 </p>
-<p align="center">
-    <img src="images/2_categories_200.png" width="50%"/><img src="images/2_categories_240.png" width="50%"/>
-</p>
-From these images, we can observe that the split at 160bp provides the maximum information. On one hand the dip for short fragments is visible and on the other hand the 2 peaks for the long fragments are distinguishable.
+
+From these images, we can observe that the split at 150bp provides the maximum information. On one hand the dip for short fragments is visible and on the other hand the 2 peaks for the long fragments are distinguishable.
 
 We can further split the long fragments into long and very long fragments by passing an additional **split_point_2** as parameter
 
-    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160,  split_point_2 = 320) 
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000, split_point_1 = 150,  split_point_2 = 300)  
 
 to produce the following plot :
 
 <p align="center">
-   <img src="images/3_categories_160_320.png" />
+   <img src="images/stomach_150_300.png" />
 </p>
 
-Here we can additionally notice that the peaks for the very long fragments are flatter and wider spread hinting towards the presence of histones in these regions. 
+Here we can additionally notice that the peaks for the very long fragments are flatter and wider spread hinting towards the presence of histones in these regions.
+
+We can likewise pass an array for the parameter **split_point_2** to plot the multiple plots for the same. 
+Multi-plotting is also recommended as it delivers more information while taking the same amount of time. This is because the runtime for single-plotting and multi-plotting is almost the same! 
 
 ### Outlook
 
