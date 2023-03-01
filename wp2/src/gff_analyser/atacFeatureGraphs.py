@@ -173,7 +173,7 @@ def compare_feature_to_celltype(adata, feature, celltype, name, sharey=True, out
         features = feature
         for feature in features:
             print(f'{feature}:')
-            render_feature_to_celltypes(adata, feature, celltype, name, out, sharey)
+            render_feature_to_celltype(adata, feature, celltype, name, out, sharey)
     else:
         render_feature_to_celltype(adata, feature, celltype, name, out, sharey)
 

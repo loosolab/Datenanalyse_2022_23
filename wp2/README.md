@@ -416,6 +416,16 @@ groups | List of String (optional) | A limited list out of key that is used for 
 
 ### Quick Start
 
+To ease you into understanding the concepts and ideas behind our solution, we invite you to take a quick tour through our workpackage in this notebook.
+
+Starting off, you should pay attention to `requirement.txt` to make sure, that all the dependencies are installed in the correct version. This can be achieved by creating an environment with `conda` or `virtual environment` and runnin `pip install -e .`, however, this will not install SCToolBox, which is required to run parts of our project.
+
+You will also have to take extra care to fill out the environmental variables to make sure you aren't running into permission issues or `file not found` errors. We tried to make the generation and labeling of these intuitive.
+
+After reading the h5ad object, we adjust the peak names, as those are coming in a format that isn't working with the tools we got. Specifically we turn the peak name of a format like `chr1:{START}-{STOP}` into `chr1_{START}_{STOP}`. We also change the observation names from `{TISSUENAME}+{BARCODE}` into only the barcodes.
+
+To generate the required GTF files you can run the function `generate_feature_files` in `GffBuilder`, which is explained in more detail in the section [General Feature File](#reading-a-general-feature-file).
+
 
 
 ### References
