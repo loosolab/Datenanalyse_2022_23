@@ -2,6 +2,7 @@ import os
 import sys
 import pandas as pd
 import numpy as np
+import episcanpy.api as epi
 
 def get_complementary_string(sequence: str):
     complementary_string = ''
@@ -23,7 +24,7 @@ def get_complementary_string(sequence: str):
 
 def check_for_output_dir(out):
     try:
-        os.mkdir("{out}/".format(out=out))
+        os.mkdir("{out}".format(out=out))
     except:
         print('out already exist, skipping creation')
 
@@ -253,7 +254,7 @@ class Organism:
                     tss_file.write(row.get_whole_line(start=row.feature_end - tss_distance, end=row.feature_end))
                     # tss_file.write('\n')
 
-    def generate_peak_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str):
+    def generate_noise_filtered_gtf(self, fragments: str, threshold: int, gtf_file: str, out: str):
 
         check_for_output_dir(out)
 
@@ -279,7 +280,30 @@ class Organism:
         
         
         return f"{out}{self.strain.strip('.gtf')}.peak{threshold}.gtf"
+
+    
+    
+    def generate_peak_gtf(self, adata, gtf_file, out):
         
+        bedtools = os.path.join('/'.join(sys.executable.split('/')[:-1]), 'bedtools')
+
+        filename_tmp = adata.obs['tissue'].values[0]
+        output_file_path = f"{out}{filename_tmp}_peaks.bed"
+
+        
+
+        with open(output_file_path, 'a') as output_file:
+
+            for entry in adata.var.index:
+                entry_list = entry.split('_')
+                entry_formated = f"{entry_list[0]}\t{entry_list[1]}\t{entry_list[2]}\t.\t.\n"
+                
+                output_file.write(entry_formated)
+
+        intersect_cmd = f"{bedtools} intersect -a {gtf_file} -b {output_file_path} > {out}{self.strain.strip('.gtf')}.peak.gtf"
+        os.system(intersect_cmd)
+        return f"{out}{self.strain.strip('.gtf')}.peak.gtf"
+    
 
     def generate_enhancer_gtf(self, gtf_file: str, enhancer_bed: str, out: str):
         

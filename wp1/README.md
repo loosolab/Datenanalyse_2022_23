@@ -50,10 +50,10 @@ and completely omit the remaining ones. This is further explained in the subsequ
 In the previous chapter we described the data files which function as input for our pipeline. Now, the first step is
 to read these files. For this purpose we will use the method **read_fragment_file(abs_path: str)**. This method reads a fragment file (.bed) at the
 absolute path location provided via parameter and returns a dictionary having the _cellbarcodes_ (column 1) as keys and the computed
-_fragment lengths_ (column 2, column 3) as the corresponding values. Now, we can use this method with our file _stomach_frag_head_30.bed_, which simply contains
-the first 30 lines of [stomach_SM-JF1O3_rep1_fragments.bed](http://yed.ucsd.edu:8787/fragment/).
+_fragment lengths_ (column 2, column 3) as the corresponding values. Now, we can use this method with our file [_test.bed_](https://github.com/loosolab/Datenanalyse_2022_23/blob/main/wp1/quickstart/test.bed), which simply contains
+the first 30 lines of [stomach_SM-JF1O3_rep1_fragments.bed](http://yed.ucsd.edu:8787/fragment/) to keep everything short.
     
-    frag_dictionary = read_fragment_file("~/stomach_frag_head_30.bed")
+    frag_dictionary = read_fragment_file("~/test.bed")
 
 Formatted printing of the _frag_dictionary_ yields the following output:
 
@@ -300,54 +300,64 @@ cells from fragment files.
 
 To look at the fragment distribution around a TSS, we plot the fragments from the BED file in a window of 2000bp around the TSS that were extracted from the GTF file. To do so we use the: 
 
-    plot.splitandprofileplt(df, tss_positions, half_window_width =1000) 
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000) 
 
 <p align="center">
-   <img src="images/profile_plot.png" width="45%"/>
+   <img src="images/stomach_all.png" width="45%"/>
 </p>
 
 When you look at the fragment distribution around TSS per tissue sample, you can notices a big peak just towards the left of the TSS. However, the plot itself doesn't give any information about the nucleosome distribution or chromatin accessibility at the TSS. 
 
 ### Splitting fragments
 
-To get an idea of the nucleosome distribution, we first need to filter the fragments that may contain a nucleosome. Filtering by fragment lengths is a reasonable approach because the typical size of a nucleosome is approximately 150bp. Therefore, we can first categorize fragments with fragment length > 160bp as fragments with nucleosomes (or long fragments). 
+To get an idea of the nucleosome distribution, we first need to filter the fragments that may contain a nucleosome. Filtering by fragment lengths is a reasonable approach because the typical size of a nucleosome is approximately 150bp. Therefore, we can first categorize fragments with fragment length > 150bp as fragments with nucleosomes (or long fragments). 
 
-To these splitting of fragments, the function **plot.splitandprofileplt** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
+To these splitting of fragments, the function **plot.split_and_multiplot_profile** is so designed, that it can take up two additional parameters **split_point_1** and **split_point_2**. 
 For e.g: we can use
 
-    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160) 
+    plot.split_and_multiplot_profile( df, tss_positions, half_window_width =1000, split_point_1 = 150) 
 
 to generate the following plot:
 
 <p align="center">
-   <img src="images/2_categories_160.png" width="45%"/>
+   <img src="images/stomach_150.png" width="45%"/>
 </p>
 
-It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. 
+It can be noticed that there is a valley instead of a peak for the long fragments. Furthermore, there are two peaks separated by approximately 300bp from each other. That is a lot of information, but here we have just intuitively selected 150bp as our splitting point which gives rise to questions such as: 
+Have we selected the right value? 
+Is there even a right value? 
+How does the plot look like for other values?
 
-Here are the plots when we try to split fragments for different fragment lengths: 
+To answer these questions, we can use the multi-plotting capability of our function. If you pass an array of values to the parameter split_point_1, instead of a single value, the function splits and plots multiple plots corresponding to the values in the array. 
+For instance, the function 
+    
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000, split_point_1 = [110,130,150,170,190,210])
+
+generates the following plots:  
+
 <p align="center">
-   <img src="images/2_categories_40.png" width="50%"/><img src="images/2_categories_80.png" width="50%"/>
+   <img src="images/stomach_110.png" width="33%"/><img src="images/stomach_130.png" width="33%"/><img src="images/stomach_150.png" width="33%"/>
 </p>
 <p align="center">
-    <img src="images/2_categories_120.png" width="50%"/><img src="images/2_categories_160.png" width="50%"/>
+    <img src="images/stomach_170.png" width="33%"/><img src="images/stomach_190.png" width="33%"/><img src="images/stomach_210.png" width="33%"/>
 </p>
-<p align="center">
-    <img src="images/2_categories_200.png" width="50%"/><img src="images/2_categories_240.png" width="50%"/>
-</p>
-From these images, we can observe that the split at 160bp provides the maximum information. On one hand the dip for short fragments is visible and on the other hand the 2 peaks for the long fragments are distinguishable.
+
+From these images, we can observe that the split at 150bp provides the maximum information. On one hand the dip for short fragments is visible and on the other hand the 2 peaks for the long fragments are distinguishable.
 
 We can further split the long fragments into long and very long fragments by passing an additional **split_point_2** as parameter
 
-    plot.splitandprofileplt( df, tss_positions, half_window_width =1000, split_point_1 = 160,  split_point_2 = 320) 
+    plot.split_and_multiplot_profile(df, tss_positions, half_window_width=1000, split_point_1 = 150,  split_point_2 = 300)  
 
 to produce the following plot :
 
 <p align="center">
-   <img src="images/3_categories_160_320.png" />
+   <img src="images/stomach_150_300.png" />
 </p>
 
-Here we can additionally notice that the peaks for the very long fragments are flatter and wider spread hinting towards the presence of histones in these regions. 
+Here we can additionally notice that the peaks for the very long fragments are flatter and wider spread hinting towards the presence of histones in these regions.
+
+We can likewise pass an array for the parameter **split_point_2** to plot the multiple plots for the same. 
+Multi-plotting is also recommended as it delivers more information while taking the same amount of time. This is because the runtime for single-plotting and multi-plotting is almost the same! 
 
 ### Outlook
 
@@ -377,9 +387,42 @@ Nevertheless, we do not claim the accuracy of the above statements. In our opini
 In addition, we plan to be able to compute not only a single score for a cell, but a multiple of scores for different categories, although the determination of these categories is still pending. Thus, the score would have more depth and interpretation possibilities.
 ### Quick Start
 
-HIER WENIG ERKLÄRUNG UND GLEICH MIT CODE LOSLEGEN
+This section is intended for all those who already have experience with this pipeline or want to work with it directly without further explanation. To start directly with an analysis we have set up the subfolder quickstart, which contains some data sets that can be applied directly. An exemplary notebook with all methods mentioned in this chapter and the resulting plots was created as **Demo.ipynb**. We will discuss the most basic functions within these notebooks in the following.
 
-AUCH AUF TESTDATENSATZ EINGEHEN
+Basically, our part of the pipeline can be executed with only a single function **load_data(path: str, bins = 30, penalty = 200)**. Here the file is read in, as well as all QC parameters are calculated. Afterwards the resulting object can be used by further functions for visualization or can be stored as AnnData object to enable further processing of e.g. the second part of the pipeline (WP2).
+
+Let's assume that we want to read the file [test.bed](https://github.com/loosolab/Datenanalyse_2022_23/blob/main/wp1/quickstart/test.bed) from the folder quickstart.
+
+    path = './quickstart/test.bed'
+    df = utils.load_data(path) 
+
+Now this dataframe is equipped with everything necessary for plotting varied aspects of the data.
+
+Plot the distributions of the Mean as histogram:
+```
+plot.histplt(df, column_name = 'Mean')
+```
+Plot the distribution of the Mean as a violin plot:
+```
+plot.vioplt(df, column_name = 'Mean')
+```
+Compare the distribution of different qc parameters in a scatterplot:
+```
+plot.compplt(df, column_name_1 = 'Score', column_name_2 = 'Mean')
+```
+Bin cells by different qc parameters and plot fragment length distributions of these slices:
+```
+plot.bindistplt(df, column_name = 'Mean', bins = 2, mode = 'equal')
+```
+Take a closer look at those slices by plotting the fragment length distribution of single cells:
+```
+plot.multiplt(df, column_name = 'Mean', bins = 2, lower_limit = 0, upper_limit = 200, mode = 'base')
+```
+Now, we can save this dataframe object as an AnnData object for further usages.
+```
+output_path = './quickstart/test_filtered.h5ad'
+utils.output_h5ad(df, output = output_path)
+```
 
 ### References
 

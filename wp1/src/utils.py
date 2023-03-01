@@ -331,8 +331,11 @@ def output_h5ad(df, output, optional_var = None):
     adata.write_h5ad(output)
 
 
-def get_dataframe_from_BED_file(bed_file):
-    
+def get_fragment_dataframe_from_bed_file(bed_file):
+    """
+    Read the genomic positions (chrom, start and end) from the BED file and
+    save it in a dataframe.
+    """
     #read bed file
     bedfile = open(bed_file, "r")
     
@@ -340,60 +343,86 @@ def get_dataframe_from_BED_file(bed_file):
     frag_list = []
     for line in bedfile:
         chrom, start, end, cell, value, etc = line.strip().split()
-        frag_list.append([chrom, start, end, cell, value, etc])
-        
-    #create a dataframe
-    frag_df = pd.DataFrame(data = frag_list, columns = ['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand'])
-
-    #Typecasting
+        frag_list.append([chrom, start, end])
+    
+    frag_df = pd.DataFrame(data = frag_list, columns = ['Chromosome', 'Start', 'End'])
+    
     frag_df.Start = pd.to_numeric(frag_df.Start, downcast='integer')
     frag_df.End = pd.to_numeric(frag_df.End, downcast='integer')
-    frag_df.Score = pd.to_numeric(frag_df.Score, downcast='float')
-    
     return frag_df
 
 
-def get_genomic_array_from_BED_dataframe(data_frame):
+def get_genomic_array_from_bed_dataframe(df):
+    """
+    This function takes a dataframe as an input and converts it into a genomic array. (See: HTSeq.GenomicArray)
     
-    #Create Genomic Array (coverage)
-    coverage = HTSeq.GenomicArray("auto", stranded=False, typecode="i")
+    :param df: dataframe containing chrom, start and end as columns.
+    """
+    #Create Genomic Array
+    genomic_array = HTSeq.GenomicArray("auto", stranded=False, typecode="i")
     
-    #add entries from dataframe to genomic array
-    for row in data_frame.itertuples():
-        coverage[HTSeq.GenomicInterval(row.Chromosome, int(row.Start), int(row.End), row.Strand)] += 1
-        
-    return coverage
+    #add it in coverage
+    for row in df.itertuples():
+        genomic_array[HTSeq.GenomicInterval(row.Chromosome, int(row.Start), int(row.End), ".")] += 1
+    return genomic_array
 
 
-def get_TSS_set_from_GTF_file(gtf_file):
+def split_df_and_get_genomic_arrays(df, array_of_splitting_values):
+    """
+    This function takes in a dataframe and an array of 'n' splitting values.
+    Based on the fragment lengths, the dataframe is split into 'n+1' intervals,
+    which are determined by these 'n' splitting values. These dataframes are
+    then subsequently converted into the 'genomic arrays' for the corresponding intervals.
+    An ARRAY of 'genomic arrays' is returned at the end.
     
+    :param df: dataframe containing chrom, start and end as columns.
+    :param array_of_splitting_values: array of values that are used to determine the intervals for splitting.
+    """
+    array_of_genomic_arrays = []
+    for index, split_point in enumerate(array_of_splitting_values):
+        array_of_genomic_arrays.append(get_genomic_array_from_bed_dataframe(df.loc[df['End']-df['Start'] <= split_point]))
+        if index != (len(array_of_splitting_values) -1):
+            df = df.loc[df['End']-df['Start'] > split_point]
+        else:
+            array_of_genomic_arrays.append(get_genomic_array_from_bed_dataframe(df.loc[df['End']-df['Start'] > split_point]))
+    return array_of_genomic_arrays
+
+
+def get_tss_set_from_gtf_file(gtf_file):
+    """
+    This function reads the TSS positions from a gtf file and
+    stores them into a set.
+    """
     #read gtf file
     gtffile = HTSeq.GFF_Reader(gtf_file)
     
-    #Add TSS data in a set.
     tsspos = set()
     for feature in gtffile:
         if feature.type == "exon" and feature.attr["exon_number"] == "1":
             tsspos.add(feature.iv.start_d_as_pos)
-    
     return tsspos
 
 
-def get_profile_for_plots(genomic_array, tss_positions, half_window_width = 500):
+def get_profile_array_for_plots(array_of_genomic_arrays, tss_positions, half_window_width):
+    """
+    This function generates a profile by adding all the
+    fragments over a certain window around TSS, over all the TSS.
+    The function returns an ARRAY of profiles corresponding to
+    the array of 'genomic arrays'.
     
-    #profile is an array that stores y-values for the plot
-    #initialize profile
-    profile = np.zeros(2*half_window_width, dtype='i')
-    
-    #update profile at all TSS positions.
+    :param array_of_genomic_arrays: an array of genomic arrays.
+    :param tss_positions: a set of TSS locations.
+    :param half_window_width: half-size of the window used to create profile.
+    """
+    profile_array = np.zeros((len(array_of_genomic_arrays),2*half_window_width), dtype='i')
     for p in tss_positions:
         start = p.pos - half_window_width
         if(start<0): continue
         window = HTSeq.GenomicInterval(p.chrom, p.pos - half_window_width, p.pos + half_window_width, ".")
-        wincvg = np.fromiter(genomic_array[window], dtype='i', count=2*half_window_width)
-        if p.strand == "+":
-            profile += wincvg
-        else:
-            profile += wincvg[::-1]
-    
-    return profile
+        for index, genomic_array in enumerate(array_of_genomic_arrays):
+            wincvg = np.fromiter(genomic_array[window], dtype='i', count=2*half_window_width)
+            if p.strand == "+":
+                profile_array[index] += wincvg
+            else:
+                profile_array[index] += wincvg[::-1]
+    return profile_array
