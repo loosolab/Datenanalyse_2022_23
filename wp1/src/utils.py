@@ -362,7 +362,7 @@ def get_genomic_array_from_bed_dataframe(df):
     genomic_array = HTSeq.GenomicArray("auto", stranded=False, typecode="i")
     
     #add it in coverage
-    for row in data_frame.itertuples():
+    for row in df.itertuples():
         genomic_array[HTSeq.GenomicInterval(row.Chromosome, int(row.Start), int(row.End), ".")] += 1
     return genomic_array
 
